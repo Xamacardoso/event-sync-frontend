@@ -35,7 +35,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gray-50">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gray-40 0">
       <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h1 className="text-2xl font-bold text-center mb-6 text-blue-900">Crie sua conta</h1>
 

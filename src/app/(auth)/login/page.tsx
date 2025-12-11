@@ -34,7 +34,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gray-50">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gray-400">
       <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h1 className="text-2xl font-bold text-center mb-2 text-blue-900">EventSync AI</h1>
         <p className="text-center text-gray-700 mb-6">Entre para acessar seus eventos</p>
