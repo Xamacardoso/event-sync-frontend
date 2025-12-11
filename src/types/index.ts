@@ -15,13 +15,13 @@ export interface Event {
   }
   
 export interface CreateEventDTO {
-title: string;
-description: string;
-localAddress?: string;
-localUrl?: string;
-startDate: string;
-endDate: string;
-price: number;
-type: 'free' | 'paid';
-maxAttendees?: number;
+    title: string;
+    description: string;
+    localAddress?: string;
+    localUrl?: string;
+    startDate: string;
+    endDate: string;
+    price: number;
+    type: 'free' | 'paid';
+    maxAttendees?: number;
 }
