@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { eventService } from '@/services/events';
 import { registrationService, Registration } from '@/services/registrations'; // Novo serviço
 import { Event } from '@/types';
-import { Calendar, MapPin, ArrowLeft, Clock, DollarSign, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Clock, DollarSign, CheckCircle, AlertTriangle, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
@@ -154,11 +154,9 @@ export default function EventDetailsPage() {
          </div>
       </main>
 
-      {/* Footer Fixo: Botão de Ação */}
       <div className="fixed bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200 z-20">
         <div className="max-w-3xl mx-auto">
           {user?.id === event.organizerId ? (
-            // --- MODIFICADO AQUI ---
             <div className="flex gap-3">
                <Link 
                   href={`/events/${event.id}/manage`}
@@ -166,17 +164,30 @@ export default function EventDetailsPage() {
                >
                   Gerenciar Inscritos
                </Link>
-               {/* Futuramente você pode adicionar botão de Editar Evento aqui */}
             </div>
-            // -----------------------
           ) : (
-            <Button 
-              onClick={handleSubscribe}
-              disabled={submitting || (!!myRegistration && myRegistration.status !== 'canceled')}
-              className={`w-full text-lg py-4 flex justify-center items-center ${getButtonClasses()}`}
-            >
-              {submitting ? 'Processando...' : getButtonContent()}
-            </Button>
+            // Lógica para Participante
+            <>
+              {myRegistration && (myRegistration.status === 'approved' || myRegistration.status === 'checked_in') ? (
+                // Se aprovado, mostra botão para QR Code
+                <Link 
+                  href={`/my-tickets/${myRegistration.id}`}
+                  className="w-full flex justify-center items-center bg-green-600 text-white py-4 rounded-lg font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-200"
+                >
+                  <QrCode className="w-5 h-5 mr-2" />
+                  Acessar Ingresso (QR Code)
+                </Link>
+              ) : (
+                // Caso contrário (Pendente, Recusado ou Não Inscrito), mostra botão normal/desabilitado
+                <Button 
+                  onClick={handleSubscribe}
+                  disabled={submitting || (!!myRegistration && myRegistration.status !== 'canceled')}
+                  className={`w-full text-lg py-4 flex justify-center items-center ${getButtonClasses()}`}
+                >
+                  {submitting ? 'Processando...' : getButtonContent()}
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

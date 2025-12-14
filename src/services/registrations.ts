@@ -49,5 +49,11 @@ export const registrationService = {
   updateStatus: async (registrationId: string, status: 'approved' | 'rejected') => {
     const response = await api.patch(`/registrations/${registrationId}/status`, { status });
     return response.data;
+  },
+
+  checkIn: async (registrationId: string) => {
+    // Supondo que sua rota no backend seja PATCH /registrations/:id/check-in
+    const response = await api.patch(`/registrations/${registrationId}/check-in`);
+    return response.data;
   }
 };

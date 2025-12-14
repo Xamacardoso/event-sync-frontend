@@ -6,7 +6,7 @@ import { eventService } from '@/services/events';
 import { Event } from '@/types';
 import { EventCard } from '@/components/events/EventCard';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'; // <--- Import do Modal
-import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays } from 'lucide-react'; // <--- Import do LogOut
+import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays, ScanLine } from 'lucide-react'; // <--- Import do LogOut
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -96,14 +96,25 @@ export default function HomePage() {
               </Link>
 
               {isAuthenticated && user?.role === 'organizer' && (
-                <Link 
-                  href="/organizer/my-events" 
+                <>
+                  <Link 
+                    href="/organizer/my-events" 
+                    className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
+                    onClick={toggleSidebar}
+                  >
+                    <CalendarDays className="w-5 h-5 text-blue-500" />
+                    Meus Eventos
+                  </Link>
+
+                  <Link 
+                  href="/organizer/check-in" 
                   className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
                   onClick={toggleSidebar}
-                >
-                  <CalendarDays className="w-5 h-5 text-blue-500" />
-                  Meus Eventos
-                </Link>
+                  >
+                  <ScanLine className="w-5 h-5 text-blue-500" />
+                  Validar Check-in
+                  </Link>
+                </>
               )}
 
               {isAuthenticated && (
