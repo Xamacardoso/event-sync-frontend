@@ -6,14 +6,14 @@ import { eventService } from '@/services/events';
 import { Event } from '@/types';
 import { EventCard } from '@/components/events/EventCard';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'; // <--- Import do Modal
-import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays, ScanLine } from 'lucide-react'; // <--- Import do LogOut
+import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays } from 'lucide-react'; // <--- Import do LogOut
 import Link from 'next/link';
 
 export default function HomePage() {
   const { user, logout, isAuthenticated } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Estados de UI
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false); // <--- Estado do Modal
@@ -43,7 +43,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 relative overflow-x-hidden">
-      
+
       {/* --- MODAL DE LOGOUT --- */}
       <ConfirmationModal
         isOpen={isLogoutModalOpen}
@@ -57,7 +57,7 @@ export default function HomePage() {
 
       {/* --- SIDEBAR & OVERLAY --- */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 transition-opacity"
           onClick={toggleSidebar}
         />
@@ -86,8 +86,8 @@ export default function HomePage() {
             )}
 
             <nav className="space-y-1">
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
                 onClick={toggleSidebar}
               >
@@ -97,8 +97,8 @@ export default function HomePage() {
 
               {isAuthenticated && user?.role === 'organizer' && (
                 <>
-                  <Link 
-                    href="/organizer/my-events" 
+                  <Link
+                    href="/organizer/my-events"
                     className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
                     onClick={toggleSidebar}
                   >
@@ -106,20 +106,13 @@ export default function HomePage() {
                     Meus Eventos
                   </Link>
 
-                  <Link 
-                  href="/organizer/check-in" 
-                  className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
-                  onClick={toggleSidebar}
-                  >
-                  <ScanLine className="w-5 h-5 text-blue-500" />
-                  Validar Check-in
-                  </Link>
+
                 </>
               )}
 
               {isAuthenticated && (
-                <Link 
-                  href="/my-tickets" 
+                <Link
+                  href="/my-tickets"
                   className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
                   onClick={toggleSidebar}
                 >
@@ -132,7 +125,7 @@ export default function HomePage() {
 
           {/* Opção de Logout também na Sidebar (Opcional, mas boa prática UX) */}
           {isAuthenticated && (
-            <button 
+            <button
               onClick={() => { toggleSidebar(); setIsLogoutModalOpen(true); }}
               className="flex items-center gap-3 px-3 py-2 text-red-600 rounded-lg hover:bg-red-50 font-medium w-full"
             >
@@ -152,12 +145,12 @@ export default function HomePage() {
           </button>
           <h1 className="text-xl font-bold text-blue-900">EventSync</h1>
         </div>
-        
+
         {/* Botão Logout no Header com Ícone */}
         <div>
           {isAuthenticated ? (
-            <button 
-              onClick={() => setIsLogoutModalOpen(true)} 
+            <button
+              onClick={() => setIsLogoutModalOpen(true)}
               className="flex items-center gap-2 text-sm font-bold text-red-600 hover:bg-red-50 px-3 py-2 rounded-md transition-colors"
             >
               <LogOut className="w-4 h-4" /> {/* Ícone adicionado */}
@@ -200,7 +193,7 @@ export default function HomePage() {
       {/* --- BOTÃO CRIAR EVENTO (Organizador) --- */}
       {isAuthenticated && user?.role === 'organizer' && (
         <div className="fixed bottom-6 right-6 z-20">
-          <Link 
+          <Link
             href="/events/new"
             className="flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-full shadow-lg hover:bg-blue-700 transition-transform hover:scale-105 active:scale-95 font-semibold"
           >

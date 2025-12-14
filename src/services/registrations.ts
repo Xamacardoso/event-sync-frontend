@@ -6,6 +6,7 @@ export interface Registration {
   userId: string;
   status: 'pending' | 'approved' | 'rejected' | 'canceled' | 'checked_in';
   createdAt: string;
+  checkedInAt?: string;
 
   // O backend pode retornar o objeto 'event' aninhado dependendo da query
   event?: {
@@ -30,10 +31,10 @@ export const registrationService = {
 
   // Rota para listar apenas as minhas inscrições
   getMyRegistrations: async () => {
-    const response = await api.get<Registration[]>('/registrations/me'); 
+    const response = await api.get<Registration[]>('/registrations/me');
     return response.data;
   },
-  
+
   // cancel: async (id: string) => {
   //   const response = await api.delete(`/registrations/${id}`);
   //   return response.data;
@@ -51,9 +52,9 @@ export const registrationService = {
     return response.data;
   },
 
-  checkIn: async (registrationId: string) => {
+  checkIn: async (registrationId: string, method: 'manual' | 'qr' = 'qr') => {
     // Supondo que sua rota no backend seja PATCH /registrations/:id/check-in
-    const response = await api.patch(`/registrations/${registrationId}/check-in`);
+    const response = await api.post(`/registrations/${registrationId}/check-in`, { method });
     return response.data;
   }
 };
