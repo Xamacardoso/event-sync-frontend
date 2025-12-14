@@ -66,7 +66,12 @@ export default function ManageEventPage() {
       {/* Header */}
       <div className="bg-white p-4 shadow-sm sticky top-0 z-10">
         <div className="flex items-center mb-4">
-          <Link href={`/events/${eventId}`} className="mr-4 text-gray-500 hover:text-blue-600">
+          <Link href="#" onClick={(e) => {
+            e.preventDefault(); // <--- IMPEDE que o Link navegue para '#'
+            router.back();      // Executa a ação de voltar
+          }
+        } 
+        className="mr-4 text-gray-500 hover:text-blue-600">
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <h1 className="text-xl font-bold text-blue-900">Gerenciar Inscritos</h1>

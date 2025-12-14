@@ -17,5 +17,11 @@ export const eventService = {
   getById: async (id: string) => {
     const response = await api.get<Event>(`/events/${id}`);
     return response.data;
+  },
+
+  getMyEvents: async () => {
+    // Certifique-se que seu backend tem a rota /events/organizer ou similar
+    const response = await api.get<Event[]>('/events/me'); 
+    return response.data;
   }
 };
