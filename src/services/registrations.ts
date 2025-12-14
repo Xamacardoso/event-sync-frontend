@@ -35,10 +35,10 @@ export const registrationService = {
     return response.data;
   },
 
-  // cancel: async (id: string) => {
-  //   const response = await api.delete(`/registrations/${id}`);
-  //   return response.data;
-  // }
+  cancel: async (id: string) => {
+    const response = await api.patch(`/registrations/${id}/cancel`);
+    return response.data;
+  },
 
   // Lista todos os inscritos de um evento (Apenas Organizador)
   getEventRegistrations: async (eventId: string) => {

@@ -16,7 +16,7 @@ export default function MyTicketsPage() {
 
   useEffect(() => {
     if (!isAuthenticated && !user) return; // Aguarda Auth
-    
+
     // Se não tiver logado, manda pro login
     if (!isAuthenticated) {
       router.push('/login');
@@ -58,7 +58,11 @@ export default function MyTicketsPage() {
         ) : registrations.length > 0 ? (
           <div className="space-y-4">
             {registrations.map((reg) => (
-              <RegistrationCard key={reg.id} registration={reg} />
+              <RegistrationCard
+                key={reg.id}
+                registration={reg}
+                onRegistrationCancelled={loadRegistrations}
+              />
             ))}
           </div>
         ) : (
