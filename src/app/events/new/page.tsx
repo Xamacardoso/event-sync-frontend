@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link'; // Import do Link para navegação
 import { ArrowLeft } from 'lucide-react'; // Import do ícone de voltar
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 // Schema de validação
 const eventFormSchema = z.object({
@@ -34,7 +35,7 @@ export default function NewEventPage() {
   useEffect(() => {
     if (!isAuthenticated && !user) return;
     if (user?.role !== 'organizer') {
-      alert('Acesso restrito a organizadores.');
+      toast.error('Acesso restrito a organizadores.');
       router.push('/');
     }
   }, [isAuthenticated, user, router]);
@@ -59,11 +60,11 @@ export default function NewEventPage() {
         startDate: new Date(data.startDate).toISOString(),
         endDate: new Date(data.endDate).toISOString(),
       });
-      alert('Evento criado com sucesso!');
+      toast.success('Evento criado com sucesso!');
       router.push('/'); 
     } catch (error) {
       console.error(error);
-      alert('Erro ao criar evento. Verifique os dados.');
+      toast.error('Erro ao criar evento. Verifique os dados.');
     }
   };
 

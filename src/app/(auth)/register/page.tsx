@@ -23,7 +23,7 @@ export default function RegisterPage() {
     try {
       setServerError('');
       await authService.register(data);
-      alert('Conta criada com sucesso! Faça login.');
+      toast('Conta criada com sucesso! Faça login.');
       router.push('/login');
     } catch (err: any) {
       if (err.response?.status === 409) {

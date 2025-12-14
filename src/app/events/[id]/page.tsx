@@ -9,6 +9,7 @@ import { Calendar, MapPin, ArrowLeft, Clock, DollarSign, CheckCircle, AlertTrian
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -67,13 +68,13 @@ export default function EventDetailsPage() {
       
       // Atualiza status imediatamente
       await checkRegistrationStatus(event.id);
-      alert('Inscrição solicitada com sucesso!');
+      toast.success('Inscrição solicitada com sucesso!');
     } catch (error: any) {
       console.error(error);
       if (error.response?.status === 409) {
-        alert('Você já está inscrito neste evento.');
+        toast.error('Você já está inscrito neste evento.');
       } else {
-        alert('Erro ao realizar inscrição. Tente novamente.');
+        toast.error('Erro ao realizar inscrição. Tente novamente.');
       }
     } finally {
       setSubmitting(false);

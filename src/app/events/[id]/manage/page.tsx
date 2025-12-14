@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Check, X, User, Search } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/Input';
+import { toast } from 'sonner';
 
 export default function ManageEventPage() {
   const params = useParams();
@@ -33,7 +34,7 @@ export default function ManageEventPage() {
       setRegistrations(data);
     } catch (error) {
       console.error('Erro ao carregar inscritos', error);
-      alert('Erro ao carregar lista de inscritos. Verifique se você é o dono do evento.');
+      toast.error('Erro ao carregar lista de inscritos. Verifique se você é o dono do evento.');
       router.push(`/events/${eventId}`);
     } finally {
       setLoading(false);
@@ -50,7 +51,7 @@ export default function ManageEventPage() {
       await registrationService.updateStatus(regId, newStatus);
     } catch (error) {
       console.error(error);
-      alert('Erro ao atualizar status.');
+      toast.error('Erro ao atualizar status.');
       loadRegistrations(); // Reverte em caso de erro
     }
   };
