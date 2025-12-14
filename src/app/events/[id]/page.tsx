@@ -1,157 +1,176 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { eventService } from '@/services/events';
+import { registrationService, Registration } from '@/services/registrations'; // Novo serviço
 import { Event } from '@/types';
-import { Calendar, MapPin, ArrowLeft, Clock, DollarSign, User } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Clock, DollarSign, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 export default function EventDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [myRegistration, setMyRegistration] = useState<Registration | null>(null);
 
-  useEffect(() => {
-    // O ID vem da URL (nome da pasta [id])
-    const eventId = params.id as string;
-    if (eventId) {
-      loadEvent(eventId);
-    }
-  }, [params.id]);
-
-  const loadEvent = async (id: string) => {
+  // 1. Carrega dados do evento
+  const loadEvent = useCallback(async (id: string) => {
     try {
       const data = await eventService.getById(id);
       setEvent(data);
     } catch (err) {
       console.error(err);
-      setError('Falha ao carregar o evento. Ele pode não existir.');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // 2. Verifica se já estou inscrito
+  const checkRegistrationStatus = useCallback(async (eventId: string) => {
+    if (!isAuthenticated) return;
+    try {
+      const myRegs = await registrationService.getMyRegistrations();
+      // Procura se existe alguma inscrição minha para este evento
+      const found = myRegs.find((r: Registration) => r.eventId === eventId);
+      setMyRegistration(found || null);
+    } catch (err) {
+      console.error('Erro ao verificar inscrição:', err);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const eventId = params.id as string;
+    if (eventId) {
+      loadEvent(eventId);
+      checkRegistrationStatus(eventId);
+    }
+  }, [params.id, loadEvent, checkRegistrationStatus]);
+
+  // 3. Ação de Inscrever-se
+  const handleSubscribe = async () => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    if (!event) return;
+
+    try {
+      setSubmitting(true);
+      await registrationService.create(event.id);
+      
+      // Atualiza status imediatamente
+      await checkRegistrationStatus(event.id);
+      alert('Inscrição solicitada com sucesso!');
+    } catch (error: any) {
+      console.error(error);
+      if (error.response?.status === 409) {
+        alert('Você já está inscrito neste evento.');
+      } else {
+        alert('Erro ao realizar inscrição. Tente novamente.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // Formatação de data
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // Auxiliar para Texto do Botão
+  const getButtonContent = () => {
+    if (!myRegistration) return 'Inscrever-se no Evento';
+    
+    switch(myRegistration.status) {
+      case 'approved':
+        return <><CheckCircle className="w-5 h-5 mr-2" /> Inscrição Confirmada</>;
+      case 'pending':
+        return <><Clock className="w-5 h-5 mr-2" /> Aguardando Aprovação</>;
+      case 'rejected':
+        return <><AlertTriangle className="w-5 h-5 mr-2" /> Inscrição Recusada</>;
+      default:
+        return 'Inscrito';
+    }
   };
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Carregando detalhes...</div>;
-  }
+  // Auxiliar para Estilo do Botão
+  const getButtonClasses = () => {
+    if (!myRegistration) return ''; // Padrão (Azul)
+    if (myRegistration.status === 'approved') return '!bg-green-600 !hover:bg-green-700 !text-white';
+    if (myRegistration.status === 'pending') return '!bg-yellow-500 !hover:bg-yellow-600 !text-white';
+    if (myRegistration.status === 'rejected') return '!bg-red-500 !hover:bg-red-600 !text-white';
+    return '';
+  };
 
-  if (error || !event) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <p className="text-red-500 mb-4">{error || 'Evento não encontrado'}</p>
-        <Button onClick={() => router.push('/')} variant="outline" className="w-auto">
-          Voltar para o Feed
-        </Button>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-10 text-center">Carregando detalhes...</div>;
+  if (!event) return <div className="p-10 text-center">Evento não encontrado</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-24">
       {/* Botão Voltar */}
       <div className="bg-white p-4 sticky top-0 z-10 shadow-sm">
-        <button 
-          onClick={() => router.back()} 
-          className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-1" />
-          Voltar
-        </button>
+        <Link href="/" className="flex items-center text-gray-600 hover:text-blue-600 transition-colors w-fit">
+          <ArrowLeft className="w-5 h-5 mr-1" /> Voltar
+        </Link>
       </div>
 
       {/* Banner */}
-      <div className="h-48 md:h-64 bg-gradient-to-r from-blue-600 to-purple-600 w-full relative">
+      <div className="h-48 md:h-64 bg-gradient-to-r from-blue-600 to-indigo-600 w-full relative">
         <div className="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black/60 to-transparent">
-          <span className="inline-block px-3 py-1 bg-white text-blue-900 text-xs font-bold rounded-full mb-2 uppercase">
-            {event.type === 'free' ? 'Gratuito' : `Pago`}
-          </span>
-          <h1 className="text-2xl md:text-3xl font-bold text-white shadow-sm">
-            {event.title}
-          </h1>
+             <span className="inline-block px-3 py-1 bg-white text-blue-900 text-xs font-bold rounded-full mb-2 uppercase">
+                {event.type === 'free' ? 'Gratuito' : `R$ ${event.price}`}
+             </span>
+             <h1 className="text-2xl md:text-3xl font-bold text-white shadow-sm">{event.title}</h1>
         </div>
       </div>
 
       <main className="p-4 max-w-3xl mx-auto space-y-6">
-        
-        {/* Informações Principais */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
-          
-          <div className="flex items-start text-gray-700">
-            <Calendar className="w-5 h-5 mr-3 text-blue-500 mt-1" />
-            <div>
-              <p className="font-semibold text-sm text-gray-500">Início</p>
-              <p>{formatDate(event.startDate)}</p>
-            </div>
-          </div>
+         {/* Info Cards */}
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+             <div className="flex items-start text-gray-700">
+                <Calendar className="w-5 h-5 mr-3 text-blue-500 mt-1" />
+                <div>
+                  <p className="font-semibold text-sm text-gray-500">Início</p>
+                  <p>{new Date(event.startDate).toLocaleString('pt-BR')}</p>
+                </div>
+             </div>
+             <div className="flex items-start text-gray-700">
+                <MapPin className="w-5 h-5 mr-3 text-blue-500 mt-1" />
+                <div>
+                  <p className="font-semibold text-sm text-gray-500">Local</p>
+                  <p>{event.localAddress || 'Online'}</p>
+                </div>
+             </div>
+         </div>
 
-          <div className="flex items-start text-gray-700">
-            <Clock className="w-5 h-5 mr-3 text-blue-500 mt-1" />
-            <div>
-              <p className="font-semibold text-sm text-gray-500">Término</p>
-              <p>{formatDate(event.endDate)}</p>
-            </div>
-          </div>
+         {/* Descrição */}
+         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Sobre</h2>
+            <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
+         </div>
+      </main>
 
-          <div className="flex items-start text-gray-700">
-            <MapPin className="w-5 h-5 mr-3 text-blue-500 mt-1" />
-            <div>
-              <p className="font-semibold text-sm text-gray-500">Local</p>
-              <p>{event.localAddress || event.localUrl || 'A definir'}</p>
-            </div>
-          </div>
-
-          {event.type === 'paid' && (
-            <div className="flex items-start text-gray-700">
-              <DollarSign className="w-5 h-5 mr-3 text-green-500 mt-1" />
-              <div>
-                <p className="font-semibold text-sm text-gray-500">Valor da Inscrição</p>
-                <p className="text-lg font-bold text-green-600">R$ {event.price.toFixed(2)}</p>
-              </div>
-            </div>
+      {/* Footer Fixo: Botão de Ação */}
+      <div className="fixed bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200 z-20">
+        <div className="max-w-3xl mx-auto">
+          {user?.id === event.organizerId ? (
+            <Button variant="outline" className="w-full border-blue-600 text-blue-600 cursor-default">
+              Você é o Organizador deste evento
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleSubscribe}
+              disabled={submitting || (!!myRegistration && myRegistration.status !== 'canceled')}
+              className={`w-full text-lg py-4 flex justify-center items-center ${getButtonClasses()}`}
+            >
+              {submitting ? 'Processando...' : getButtonContent()}
+            </Button>
           )}
         </div>
-
-        {/* Descrição */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Sobre o Evento</h2>
-          <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {event.description}
-          </p>
-        </div>
-
-        {/* Botão de Ação */}
-        <div className="fixed bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200 md:static md:bg-transparent md:border-0">
-          <div className="max-w-3xl mx-auto">
-            {user?.id === event.organizerId ? (
-              <Button variant="outline" className="w-full border-blue-600 text-blue-600">
-                Gerenciar Evento (Você é o Organizador)
-              </Button>
-            ) : (
-              <Button className="w-full text-lg py-4">
-                Inscrever-se no Evento
-              </Button>
-            )}
-          </div>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
