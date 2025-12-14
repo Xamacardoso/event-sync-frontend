@@ -21,12 +21,17 @@ export const eventService = {
 
   getMyEvents: async () => {
     // Certifique-se que seu backend tem a rota /events/organizer ou similar
-    const response = await api.get<Event[]>('/events/me'); 
+    const response = await api.get<Event[]>('/events/me');
     return response.data;
   },
 
   cancel: async (id: string) => {
     const response = await api.patch<Event>(`/events/${id}`);
+    return response.data;
+  },
+
+  update: async (id: string, data: Partial<CreateEventDTO>) => {
+    const response = await api.put<Event>(`/events/${id}`, data);
     return response.data;
   }
 };

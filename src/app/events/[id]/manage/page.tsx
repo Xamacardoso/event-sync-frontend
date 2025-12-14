@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { eventService } from '@/services/events';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { Event, CreateEventDTO } from '@/types';
+import { EditEventModal } from '@/components/events/EditEventModal';
 
 export default function ManageEventPage() {
   const params = useParams();
@@ -29,6 +31,7 @@ export default function ManageEventPage() {
   // Estados Gerais
   const [activeTab, setActiveTab] = useState<'approvals' | 'checkin' | 'settings'>('approvals');
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
 
@@ -40,6 +43,7 @@ export default function ManageEventPage() {
 
   // Modais diversos
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
 
   useEffect(() => {
@@ -47,8 +51,22 @@ export default function ManageEventPage() {
       router.push('/login');
       return;
     }
-    loadRegistrations();
+    Promise.all([loadRegistrations(), loadEvent()]).finally(() => setLoading(false));
   }, [eventId, isAuthenticated]);
+
+  const loadEvent = async () => {
+    try {
+      const data = await eventService.getById(eventId);
+      setEvent(data);
+    } catch (error) {
+      console.error('Erro ao carregar evento:', error);
+    }
+  };
+
+  const handleUpdateEvent = async (id: string, data: Partial<CreateEventDTO>) => {
+    await eventService.update(id, data);
+    loadEvent(); // Recarrega dados atualizados
+  };
 
   const handleCancelEvent = async () => {
     setCanceling(true);
@@ -73,8 +91,6 @@ export default function ManageEventPage() {
     } catch (error) {
       console.error('Erro ao carregar inscritos', error);
       toast.error('Erro ao carregar lista. Verifique suas permissões.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -223,17 +239,6 @@ export default function ManageEventPage() {
 
       <main className="p-4 max-w-3xl mx-auto space-y-6">
 
-        {/* Campo de Busca Global */}
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Filtrar por nome ou email..."
-            className="text-black w-full pl-10 p-3 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
-        </div>
 
         {loading ? (
           <div className="text-center py-10 text-gray-500">Carregando dados...</div>
@@ -242,6 +247,18 @@ export default function ManageEventPage() {
             {/* === CONTEÚDO DA ABA APROVAÇÕES === */}
             {activeTab === 'approvals' && (
               <div className="space-y-3">
+                {/* Busca Local */}
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Filtrar por nome ou email..."
+                    className="text-black w-full pl-10 p-3 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  />
+                </div>
+
                 {approvalList.length === 0 ? (
                   <div className="text-center py-8 text-gray-500 bg-white rounded-xl border border-dashed border-gray-200">
                     Nenhuma inscrição pendente ou processada encontrada.
@@ -319,12 +336,6 @@ export default function ManageEventPage() {
                           allowMultiple={true}
                           scanDelay={500}
                           paused={paused}
-                          components={{
-                            onOff: false,
-                            torch: false,
-                            zoom: false,
-                            finder: false,
-                          }}
                         />
                         {paused && !processingCheckIn && (
                           <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center z-10 backdrop-blur-[2px]">
@@ -345,6 +356,18 @@ export default function ManageEventPage() {
                       </form>
                     )}
                   </div>
+                </div>
+
+                {/* Busca Local (Check-in) */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Filtrar ticket por nome do participante..."
+                    className="text-black w-full pl-10 p-3 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  />
                 </div>
 
                 {/* Lista de Check-ins Realizados */}
@@ -387,13 +410,64 @@ export default function ManageEventPage() {
             {activeTab === 'settings' && (
               <div className="space-y-6">
 
-                {/* Cartão de Informações (Placeholder para futura edição) */}
+                {/* Cartão de Informações*/}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Detalhes do Evento</h3>
-                  <p className="text-gray-500 text-sm mb-4">
-                    A funcionalidade de editar detalhes do evento (data, local, descrição) estará disponível em breve.
-                  </p>
-                  <Button variant="outline" disabled>
+                  <h3 className="text-lg font-bold text-gray-900 mb-6 border-b pb-2">Detalhes do Evento</h3>
+
+                  {event ? (
+                    <div className="space-y-4 mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase">Título</label>
+                          <p className="text-gray-900 font-medium">{event.title}</p>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase">Tipo</label>
+                          <div className="mt-1">
+                            <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold uppercase ${event.price > 0 ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                              }`}>
+                              {event.price > 0 ? `Pago (R$ ${Number(event.price).toFixed(2)})` : 'Gratuito'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase">Descrição</label>
+                        <p className="text-gray-700 text-sm whitespace-pre-wrap mt-1">{event.description}</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase">Início</label>
+                          <p className="text-gray-900 text-sm">
+                            {new Date(event.startDate).toLocaleDateString('pt-BR')} às {new Date(event.startDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase">Fim</label>
+                          <p className="text-gray-900 text-sm">
+                            {new Date(event.endDate).toLocaleDateString('pt-BR')} às {new Date(event.endDate).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase">Localização</label>
+                        <p className="text-gray-900 text-sm flex items-center gap-2 mt-1">
+                          {event.localAddress ? (
+                            <>📍 {event.localAddress}</>
+                          ) : event.localUrl ? (
+                            <>🌐 Link: <a href={event.localUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline">{event.localUrl}</a></>
+                          ) : 'Não informado'}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 mb-4">Não foi possível carregar os detalhes.</p>
+                  )}
+
+                  <Button variant="outline" onClick={() => setIsEditModalOpen(true)}>
                     Editar Informações
                   </Button>
                 </div>
@@ -426,6 +500,12 @@ export default function ManageEventPage() {
           </>
         )}
       </main>
+      <EditEventModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleUpdateEvent}
+        event={event}
+      />
     </div>
   );
 }
