@@ -13,6 +13,11 @@ export interface Registration {
     startDate: string;
     localAddress?: string;
   };
+
+  user?: {
+    name: string;
+    email: string;
+  };
 }
 
 export const registrationService = {
@@ -33,4 +38,16 @@ export const registrationService = {
   //   const response = await api.delete(`/registrations/${id}`);
   //   return response.data;
   // }
+
+  // Lista todos os inscritos de um evento (Apenas Organizador)
+  getEventRegistrations: async (eventId: string) => {
+    const response = await api.get<Registration[]>(`/events/${eventId}/registrations`);
+    return response.data;
+  },
+
+  // Atualiza o status (Aprovar/Recusar)
+  updateStatus: async (registrationId: string, status: 'approved' | 'rejected') => {
+    const response = await api.patch(`/registrations/${registrationId}/status`, { status });
+    return response.data;
+  }
 };

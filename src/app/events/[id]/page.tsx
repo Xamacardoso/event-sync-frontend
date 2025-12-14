@@ -157,9 +157,17 @@ export default function EventDetailsPage() {
       <div className="fixed bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200 z-20">
         <div className="max-w-3xl mx-auto">
           {user?.id === event.organizerId ? (
-            <Button variant="outline" className="w-full border-blue-600 text-blue-600 cursor-default">
-              Você é o Organizador deste evento
-            </Button>
+            // --- MODIFICADO AQUI ---
+            <div className="flex gap-3">
+               <Link 
+                  href={`/events/${event.id}/manage`}
+                  className="w-full flex justify-center items-center bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 transition-colors"
+               >
+                  Gerenciar Inscritos
+               </Link>
+               {/* Futuramente você pode adicionar botão de Editar Evento aqui */}
+            </div>
+            // -----------------------
           ) : (
             <Button 
               onClick={handleSubscribe}
@@ -171,6 +179,7 @@ export default function EventDetailsPage() {
           )}
         </div>
       </div>
+      
     </div>
   );
 }
