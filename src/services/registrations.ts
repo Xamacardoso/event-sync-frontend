@@ -6,7 +6,7 @@ export interface Registration {
   userId: string;
   status: 'pending' | 'approved' | 'rejected' | 'canceled' | 'checked_in';
   createdAt: string;
-  checkedInAt?: string;
+  checkedInAt?: string | null;
 
   // O backend pode retornar o objeto 'event' aninhado dependendo da query
   event?: {

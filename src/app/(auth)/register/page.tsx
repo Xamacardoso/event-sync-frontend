@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { authService } from '@/services/auth';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -40,44 +41,44 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold text-center mb-6 text-blue-900">Crie sua conta</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input 
-            label="Nome Completo" 
+          <Input
+            label="Nome Completo"
             placeholder="Ex: João Silva"
             {...register('name')}
             error={errors.name?.message}
           />
 
-          <Input 
-            label="E-mail" 
-            type="email" 
+          <Input
+            label="E-mail"
+            type="email"
             placeholder="seu@email.com"
             {...register('email')}
             error={errors.email?.message}
           />
-          
+
           <div className="flex gap-4">
-             <div className="w-1/2">
-                <Input 
-                    label="Cidade (Opcional)" 
-                    placeholder="Teresina"
-                    {...register('city')}
-                />
-             </div>
-             <div className="w-1/2 flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Tipo de Conta</label>
-                <select 
-                    {...register('role')}
-                    className="p-3 border border-gray-300 rounded-lg bg-gray-50 outline-none text-black"
-                >
-                    <option value="user">Participante</option>
-                    <option value="organizer">Organizador</option>
-                </select>
-             </div>
+            <div className="w-1/2">
+              <Input
+                label="Cidade (Opcional)"
+                placeholder="Teresina"
+                {...register('city')}
+              />
+            </div>
+            <div className="w-1/2 flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">Tipo de Conta</label>
+              <select
+                {...register('role')}
+                className="p-3 border border-gray-300 rounded-lg bg-gray-50 outline-none text-black"
+              >
+                <option value="user">Participante</option>
+                <option value="organizer">Organizador</option>
+              </select>
+            </div>
           </div>
 
-          <Input 
-            label="Senha" 
-            type="password" 
+          <Input
+            label="Senha"
+            type="password"
             placeholder="Mínimo 6 caracteres"
             {...register('password')}
             error={errors.password?.message}

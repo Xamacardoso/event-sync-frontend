@@ -6,13 +6,18 @@ import { registrationService, Registration } from '@/services/registrations';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   ArrowLeft, Check, X, User, Search,
-  ListChecks, QrCode, Camera, Keyboard, Clock
+  ListChecks, QrCode, Camera, Keyboard, Clock,
+  Trash2,
+  AlertTriangle,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { eventService } from '@/services/events';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 
 export default function ManageEventPage() {
   const params = useParams();
@@ -22,7 +27,7 @@ export default function ManageEventPage() {
   const eventId = params.id as string;
 
   // Estados Gerais
-  const [activeTab, setActiveTab] = useState<'approvals' | 'checkin'>('approvals');
+  const [activeTab, setActiveTab] = useState<'approvals' | 'checkin' | 'settings'>('approvals');
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -33,6 +38,10 @@ export default function ManageEventPage() {
   const [processingCheckIn, setProcessingCheckIn] = useState(false);
   const [paused, setPaused] = useState(false);
 
+  // Modais diversos
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [canceling, setCanceling] = useState(false);
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/login');
@@ -40,6 +49,22 @@ export default function ManageEventPage() {
     }
     loadRegistrations();
   }, [eventId, isAuthenticated]);
+
+  const handleCancelEvent = async () => {
+    setCanceling(true);
+    try {
+      await eventService.cancel(eventId);
+      toast.success('Evento cancelado com sucesso.');
+      router.push('/organizer/my-events'); // Redireciona após cancelar
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.response?.data?.message || 'Erro ao cancelar evento.';
+      toast.error(msg);
+      setIsCancelModalOpen(false); // Fecha o modal se der erro
+    } finally {
+      setCanceling(false);
+    }
+  };
 
   const loadRegistrations = async () => {
     try {
@@ -136,6 +161,20 @@ export default function ManageEventPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+
+      {/* 6. Componente do Modal de Confirmação */}
+      <ConfirmationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleCancelEvent}
+        title="Cancelar Evento?"
+        description="Esta ação é irreversível. O evento será marcado como cancelado e não aceitará novas inscrições ou check-ins."
+        confirmText="Sim, Cancelar Evento"
+        cancelText="Voltar"
+        variant="danger"
+        isLoading={canceling}
+      />
+
       {/* Header com Navegação */}
       <div className="bg-white shadow-sm sticky top-0 z-20">
         <div className="p-4 border-b border-gray-100 flex items-center">
@@ -145,7 +184,7 @@ export default function ManageEventPage() {
           <h1 className="text-xl font-bold text-blue-900">Gerenciar Evento</h1>
         </div>
 
-        {/* AppBar (Abas) */}
+        {/* 7. AppBar Atualizada com 3 Abas */}
         <div className="flex">
           <button
             onClick={() => setActiveTab('approvals')}
@@ -155,8 +194,9 @@ export default function ManageEventPage() {
               }`}
           >
             <ListChecks className="w-5 h-5" />
-            Aprovações ({approvalList.length})
+            <span className="hidden sm:inline">Aprovações</span>
           </button>
+
           <button
             onClick={() => setActiveTab('checkin')}
             className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 border-b-2 transition-colors ${activeTab === 'checkin'
@@ -165,7 +205,18 @@ export default function ManageEventPage() {
               }`}
           >
             <QrCode className="w-5 h-5" />
-            Check-in ({checkInList.length})
+            <span className="hidden sm:inline">Check-in</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 border-b-2 transition-colors ${activeTab === 'settings'
+              ? 'border-red-600 text-red-600 bg-red-50/20' // Destaque sutil em vermelho
+              : 'border-transparent text-gray-500 hover:bg-gray-50'
+              }`}
+          >
+            <Settings className="w-5 h-5" />
+            <span className="hidden sm:inline">Opções</span>
           </button>
         </div>
       </div>
@@ -268,6 +319,12 @@ export default function ManageEventPage() {
                           allowMultiple={true}
                           scanDelay={500}
                           paused={paused}
+                          components={{
+                            onOff: false,
+                            torch: false,
+                            zoom: false,
+                            finder: false,
+                          }}
                         />
                         {paused && !processingCheckIn && (
                           <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center z-10 backdrop-blur-[2px]">
@@ -320,6 +377,47 @@ export default function ManageEventPage() {
                         </div>
                       ))
                     )}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 8. CONTEÚDO DA NOVA ABA CONFIGURAÇÕES (SETTINGS) */}
+            {activeTab === 'settings' && (
+              <div className="space-y-6">
+
+                {/* Cartão de Informações (Placeholder para futura edição) */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Detalhes do Evento</h3>
+                  <p className="text-gray-500 text-sm mb-4">
+                    A funcionalidade de editar detalhes do evento (data, local, descrição) estará disponível em breve.
+                  </p>
+                  <Button variant="outline" disabled>
+                    Editar Informações
+                  </Button>
+                </div>
+
+                {/* Zona de Perigo */}
+                <div className="bg-red-50 p-6 rounded-xl border border-red-100">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-red-100 p-3 rounded-full shrink-0">
+                      <AlertTriangle className="w-6 h-6 text-red-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-red-900 mb-1">Zona de Perigo</h3>
+                      <p className="text-red-700 text-sm mb-6">
+                        Cancelar o evento é uma ação irreversível. Todos os participantes poderão visualizar que o evento foi cancelado.
+                      </p>
+
+                      <button
+                        onClick={() => setIsCancelModalOpen(true)}
+                        className="bg-white border-2 border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 px-6 py-3 rounded-lg font-bold transition-all flex items-center gap-2"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                        Cancelar Evento
+                      </button>
+                    </div>
                   </div>
                 </div>
 
