@@ -295,6 +295,29 @@ export default function EventDetailsPage() {
           <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
         </div>
 
+        {/* Organizador */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <p className="text-sm text-gray-500 font-semibold mb-3">Organizado por</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden">
+              {(event as any).organizer?.photoUrl ? (
+                <img src={(event as any).organizer.photoUrl} alt="Org" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-xl">
+                  {(event as any).organizer?.name?.charAt(0).toUpperCase() || 'O'}
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="font-bold text-gray-900 text-lg">{(event as any).organizer?.name || 'Organizador Desconhecido'}</p>
+              {/* Rating placeholder - would need actual field from backend */}
+              <p className="text-sm text-yellow-500 flex items-center gap-1 font-medium">
+                ★ 4.8 <span className="text-gray-400 font-normal text-xs">(12 avaliações)</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Participantes */}
         <ParticipantsSection eventId={event.id} />
       </main>

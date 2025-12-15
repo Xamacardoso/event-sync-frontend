@@ -136,7 +136,7 @@ function ChatContent() {
                 <form onSubmit={handleSend} className="flex gap-2 max-w-2xl mx-auto">
                     <input
                         type="text"
-                        className="flex-1 bg-gray-100 border-0 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                        className="flex-1 bg-gray-100 text-gray-900 placeholder:text-gray-500 border-0 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                         placeholder="Digite sua mensagem..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}

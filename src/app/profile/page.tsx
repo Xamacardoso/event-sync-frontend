@@ -158,7 +158,7 @@ export default function ProfilePage() {
                                         <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                         <input
                                             type="text"
-                                            className={`w-full pl-10 p-3 rounded-lg border ${isEditing ? 'border-gray-200 focus:ring-blue-500 bg-white' : 'border-transparent bg-gray-50'}`}
+                                            className={`w-full pl-10 p-3 rounded-lg border ${isEditing ? 'border-gray-200 focus:ring-blue-500 bg-white text-gray-900 placeholder:text-gray-500' : 'border-transparent bg-gray-50 text-gray-800'}`}
                                             value={formData.name || ''}
                                             onChange={(e) => handleChange('name', e.target.value)}
                                             readOnly={!isEditing}
@@ -187,7 +187,7 @@ export default function ProfilePage() {
                                         <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                         <input
                                             type="text"
-                                            className={`w-full pl-10 p-3 rounded-lg border ${isEditing ? 'border-gray-200 focus:ring-blue-500 bg-white' : 'border-transparent bg-gray-50'}`}
+                                            className={`w-full pl-10 p-3 rounded-lg border ${isEditing ? 'border-gray-200 focus:ring-blue-500 bg-white text-gray-900 placeholder:text-gray-500' : 'border-transparent bg-gray-50 text-gray-800'}`}
                                             value={formData.city || ''}
                                             onChange={(e) => handleChange('city', e.target.value)}
                                             placeholder={isEditing ? "Sua cidade" : "Não informado"}
@@ -202,7 +202,7 @@ export default function ProfilePage() {
                                         <Camera className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                         <input
                                             type="url"
-                                            className={`w-full pl-10 p-3 rounded-lg border ${isEditing ? 'border-gray-200 focus:ring-blue-500 bg-white' : 'border-transparent bg-gray-50'}`}
+                                            className={`w-full pl-10 p-3 rounded-lg border ${isEditing ? 'border-gray-200 focus:ring-blue-500 bg-white text-gray-900 placeholder:text-gray-500' : 'border-transparent bg-gray-50 text-gray-800'}`}
                                             value={formData.photoUrl || ''}
                                             onChange={(e) => handleChange('photoUrl', e.target.value)}
                                             placeholder={isEditing ? "https://..." : "Não informado"}
