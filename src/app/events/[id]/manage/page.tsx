@@ -19,7 +19,6 @@ import { Scanner } from '@yudiel/react-qr-scanner';
 import { eventService } from '@/services/events';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { Event, CreateEventDTO } from '@/types';
-import { EditEventModal } from '@/components/events/EditEventModal';
 
 export default function ManageEventPage() {
   const params = useParams();
@@ -43,7 +42,6 @@ export default function ManageEventPage() {
 
   // Modais diversos
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
 
   useEffect(() => {
@@ -244,6 +242,48 @@ export default function ManageEventPage() {
           <div className="text-center py-10 text-gray-500">Carregando dados...</div>
         ) : (
           <>
+            {/* 1. Dashboard de Estatísticas */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div className="bg-blue-100 p-3 rounded-full text-blue-600">
+                  <User className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 font-medium">Total de Inscritos</p>
+                  <p className="text-2xl font-bold text-gray-900">{registrations.length}</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div className="bg-green-100 p-3 rounded-full text-green-600">
+                  <Check className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 font-medium">Check-ins Realizados</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {registrations.filter(r => r.status === 'checked_in').length}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div className="bg-purple-100 p-3 rounded-full text-purple-600">
+                  <span className="text-xl font-bold">R$</span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 font-medium">Receita Estimada</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    R$ {registrations.reduce((acc, r) => {
+                      if (r.status === 'approved' || r.status === 'checked_in') {
+                        return acc + (event?.price || 0);
+                      }
+                      return acc;
+                    }, 0).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* === CONTEÚDO DA ABA APROVAÇÕES === */}
             {activeTab === 'approvals' && (
               <div className="space-y-3">
@@ -467,9 +507,11 @@ export default function ManageEventPage() {
                     <p className="text-gray-500 mb-4">Não foi possível carregar os detalhes.</p>
                   )}
 
-                  <Button variant="outline" onClick={() => setIsEditModalOpen(true)}>
-                    Editar Informações
-                  </Button>
+                  <Link href={`/events/${eventId}/edit`}>
+                    <Button variant="outline">
+                      Editar Informações
+                    </Button>
+                  </Link>
                 </div>
 
                 {/* Status Actions */}
@@ -532,12 +574,6 @@ export default function ManageEventPage() {
           </>
         )}
       </main>
-      <EditEventModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onSave={handleUpdateEvent}
-        event={event}
-      />
     </div>
   );
 }
