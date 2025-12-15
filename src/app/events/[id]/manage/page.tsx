@@ -472,6 +472,38 @@ export default function ManageEventPage() {
                   </Button>
                 </div>
 
+                {/* Status Actions */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Ações do Evento</h3>
+                  <div className="flex gap-3">
+                    {event?.status === 'draft' && (
+                      <Button
+                        onClick={() => handleUpdateEvent(event.id, { status: 'published' })}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Publicar Evento
+                      </Button>
+                    )}
+                    {event?.status === 'published' && (
+                      <Button
+                        onClick={() => handleUpdateEvent(event.id, { status: 'draft' })}
+                        variant="outline"
+                        className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                      >
+                        Reverter para Rascunho
+                      </Button>
+                    )}
+                    {event?.status === 'published' && (
+                      <Button
+                        onClick={() => handleUpdateEvent(event.id, { status: 'finished' })}
+                        className="bg-gray-800 hover:bg-gray-900 text-white"
+                      >
+                        Finalizar Evento
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Zona de Perigo */}
                 <div className="bg-red-50 p-6 rounded-xl border border-red-100">
                   <div className="flex items-start gap-4">

@@ -2,10 +2,10 @@ import api from './api';
 import { Event, CreateEventDTO } from '@/types';
 
 export const eventService = {
-  // Lista eventos (o backend filtra por padrão)
-  list: async () => {
-    // buscar os publicados por padrão para o Feed
-    const response = await api.get<Event[]>('/events?status=published');
+  // Lista eventos com filtros
+  list: async (filters?: { title?: string; startDate?: string; endDate?: string; type?: 'free' | 'paid'; status?: 'draft' | 'published' | 'canceled' | 'finished' }) => {
+    // const params = new URLSearchParams(filters as any).toString();
+    const response = await api.get<Event[]>('/events', { params: filters });
     return response.data;
   },
 
@@ -20,13 +20,12 @@ export const eventService = {
   },
 
   getMyEvents: async () => {
-    // Certifique-se que seu backend tem a rota /events/organizer ou similar
-    const response = await api.get<Event[]>('/events/me');
+    const response = await api.get<Event[]>('/events/my-events');
     return response.data;
   },
 
   cancel: async (id: string) => {
-    const response = await api.patch<Event>(`/events/${id}`);
+    const response = await api.patch<Event>(`/events/${id}/cancel`);
     return response.data;
   },
 

@@ -63,7 +63,12 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
 
   return (
     <>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row relative">
+        {event.status === 'canceled' && (
+          <div className="absolute top-0 inset-x-0 bg-red-600/10 text-red-600 text-[10px] font-bold text-center py-0.5 border-b border-red-100 z-10">
+            EVENTO CANCELADO
+          </div>
+        )}
         {/* Faixa de Status */}
         <div className={`p-3 md:w-40 flex items-center justify-center font-bold text-sm uppercase tracking-wider border-b md:border-b-0 md:border-r ${getStatusStyle()}`}>
           {getStatusLabel()}

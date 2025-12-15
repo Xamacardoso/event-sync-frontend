@@ -16,7 +16,7 @@ export default function OrganizerEventsPage() {
 
   useEffect(() => {
     if (!isAuthenticated && !user) return;
-    
+
     // Proteção de rota
     if (user?.role !== 'organizer') {
       router.push('/');
@@ -46,11 +46,11 @@ export default function OrganizerEventsPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <Link href="/" className="mr-4 text-gray-500 hover:text-blue-600">
-                <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-6 h-6" />
             </Link>
             <h1 className="text-2xl font-bold text-blue-900">Eventos que Organizo</h1>
           </div>
-          <Link 
+          <Link
             href="/events/new"
             className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
             title="Criar Novo Evento"
@@ -66,31 +66,38 @@ export default function OrganizerEventsPage() {
             {events.map((event) => (
               <div key={event.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start">
-                    <div>
-                        <h2 className="text-lg font-bold text-gray-900 mb-1">{event.title}</h2>
-                        <div className="flex flex-col sm:flex-row gap-2 text-sm text-gray-500 mb-3">
-                            <span className="flex items-center">
-                                <Calendar className="w-4 h-4 mr-1 text-blue-500" />
-                                {new Date(event.startDate).toLocaleDateString('pt-BR')}
-                            </span>
-                            <span className="flex items-center">
-                                <MapPin className="w-4 h-4 mr-1 text-blue-500" />
-                                {event.localAddress || 'Online'}
-                            </span>
-                        </div>
-                        <span className={`inline-block px-2 py-1 text-xs font-bold rounded uppercase ${
-                            event.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                        }`}>
-                            {event.status === 'published' ? 'Publicado' : 'Rascunho'}
-                        </span>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1">{event.title}</h2>
+                    <div className="flex flex-col sm:flex-row gap-2 text-sm text-gray-500 mb-3">
+                      <span className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-1 text-blue-500" />
+                        {new Date(event.startDate).toLocaleDateString('pt-BR')}
+                      </span>
+                      <span className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-1 text-blue-500" />
+                        {event.localAddress || 'Online'}
+                      </span>
                     </div>
-                    
-                    <Link 
-                        href={`/events/${event.id}/manage`}
-                        className="text-sm bg-gray-100 text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100 transition-colors"
-                    >
-                        Gerenciar
-                    </Link>
+                    <span className={`inline-block px-2 py-1 text-xs font-bold rounded uppercase ${event.status === 'published' ? 'bg-green-100 text-green-700' :
+                        event.status === 'canceled' ? 'bg-red-100 text-red-700' :
+                          event.status === 'finished' ? 'bg-gray-100 text-gray-700 text-decoration-line-through' :
+                            'bg-yellow-100 text-yellow-700'
+                      }`}>
+                      {
+                        event.status === 'published' ? 'Publicado' :
+                          event.status === 'canceled' ? 'Cancelado' :
+                            event.status === 'finished' ? 'Finalizado' :
+                              'Rascunho'
+                      }
+                    </span>
+                  </div>
+
+                  <Link
+                    href={`/events/${event.id}/manage`}
+                    className="text-sm bg-gray-100 text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100 transition-colors"
+                  >
+                    Gerenciar
+                  </Link>
                 </div>
               </div>
             ))}

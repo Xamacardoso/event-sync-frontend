@@ -13,6 +13,7 @@ export interface Registration {
     title: string;
     startDate: string;
     localAddress?: string;
+    status: 'draft' | 'published' | 'finished' | 'canceled';
   };
 
   user?: {

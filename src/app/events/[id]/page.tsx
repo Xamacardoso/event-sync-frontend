@@ -183,7 +183,7 @@ export default function EventDetailsPage() {
                 href={`/events/${event.id}/manage`}
                 className="w-full flex justify-center items-center bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 transition-colors"
               >
-                Gerenciar Inscritos
+                Gerenciar Evento
               </Link>
             </div>
           ) : (

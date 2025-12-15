@@ -24,13 +24,24 @@ export const EventCard = ({ event }: EventCardProps) => {
         <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded-md text-xs font-bold text-blue-900 uppercase">
           {event.type === 'free' ? 'Gratuito' : `R$ ${event.price}`}
         </div>
+
+        {event.status === 'canceled' && (
+          <div className="absolute top-2 left-2 bg-red-600/90 backdrop-blur px-2 py-1 rounded-md text-xs font-bold text-white uppercase shadow-sm">
+            Cancelado
+          </div>
+        )}
+        {event.status === 'finished' && (
+          <div className="absolute top-2 left-2 bg-gray-600/90 backdrop-blur px-2 py-1 rounded-md text-xs font-bold text-white uppercase shadow-sm">
+            Finalizado
+          </div>
+        )}
       </div>
 
       <div className="p-4">
         <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">
           {event.title}
         </h3>
-        
+
         <div className="flex items-center text-gray-600 text-sm mb-1">
           <Calendar className="w-4 h-4 mr-2 text-blue-500" />
           <span>{formattedDate}</span>
@@ -43,7 +54,7 @@ export const EventCard = ({ event }: EventCardProps) => {
           </span>
         </div>
 
-        <Link 
+        <Link
           href={`/events/${event.id}`} // Futura página de detalhes
           className="block w-full text-center py-2 bg-gray-50 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors border border-blue-100"
         >

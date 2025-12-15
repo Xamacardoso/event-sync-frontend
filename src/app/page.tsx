@@ -6,7 +6,7 @@ import { eventService } from '@/services/events';
 import { Event } from '@/types';
 import { EventCard } from '@/components/events/EventCard';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'; // <--- Import do Modal
-import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays } from 'lucide-react'; // <--- Import do LogOut
+import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays, Search, Filter } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -14,17 +14,30 @@ export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados de UI
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<undefined | 'free' | 'paid'>(undefined);
+  const [filterStatus, setFilterStatus] = useState<undefined | 'published' | 'canceled' | 'finished'>('published');
+
+  // UI States
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false); // <--- Estado do Modal
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
+    // Debounce search
+    const timer = setTimeout(() => {
+      fetchEvents();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, filterType, filterStatus]);
 
   const fetchEvents = async () => {
+    setLoading(true);
     try {
-      const data = await eventService.list();
+      const data = await eventService.list({
+        title: searchTerm || undefined,
+        type: filterType,
+        status: filterStatus,
+      });
       setEvents(data);
     } catch (error) {
       console.error('Erro ao buscar eventos:', error);
@@ -35,7 +48,6 @@ export default function HomePage() {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  // Função que executa o logout de fato (chamada pelo modal)
   const handleConfirmLogout = () => {
     logout();
     setIsLogoutModalOpen(false);
@@ -52,7 +64,7 @@ export default function HomePage() {
         title="Sair da Conta"
         description="Tem certeza que deseja sair? Você precisará fazer login novamente para acessar seus ingressos."
         confirmText="Sair"
-        variant="danger" // Usa o estilo vermelho de alerta
+        variant="danger"
       />
 
       {/* --- SIDEBAR & OVERLAY --- */}
@@ -63,7 +75,9 @@ export default function HomePage() {
         />
       )}
 
+      {/* ... SIDEBAR CONTENT (Manter igual) ... */}
       <aside className={`fixed top-0 left-0 h-full w-64 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* ... manter conteúdo da sidebar ... */}
         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
           <h2 className="text-xl font-bold text-blue-900">Menu</h2>
           <button onClick={toggleSidebar} className="text-gray-500 hover:text-red-500">
@@ -95,6 +109,24 @@ export default function HomePage() {
                 Início
               </Link>
 
+              <Link
+                href="/profile"
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
+                onClick={toggleSidebar}
+              >
+                <User className="w-5 h-5 text-blue-500" />
+                Meu Perfil
+              </Link>
+
+              <Link
+                href="/social"
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
+                onClick={toggleSidebar}
+              >
+                <User className="w-5 h-5 text-blue-500" />
+                Rede Social
+              </Link>
+
               {isAuthenticated && user?.role === 'organizer' && (
                 <>
                   <Link
@@ -105,8 +137,6 @@ export default function HomePage() {
                     <CalendarDays className="w-5 h-5 text-blue-500" />
                     Meus Eventos
                   </Link>
-
-
                 </>
               )}
 
@@ -123,7 +153,6 @@ export default function HomePage() {
             </nav>
           </div>
 
-          {/* Opção de Logout também na Sidebar (Opcional, mas boa prática UX) */}
           {isAuthenticated && (
             <button
               onClick={() => { toggleSidebar(); setIsLogoutModalOpen(true); }}
@@ -136,8 +165,7 @@ export default function HomePage() {
         </div>
       </aside>
 
-
-      {/* --- HEADER --- */}
+      {/* --- HEADER (Manter igual) --- */}
       <header className="bg-white p-4 sticky top-0 z-30 shadow-sm flex justify-between items-center">
         <div className="flex items-center gap-3">
           <button onClick={toggleSidebar} className="p-1 hover:bg-gray-100 rounded-md transition-colors">
@@ -146,14 +174,13 @@ export default function HomePage() {
           <h1 className="text-xl font-bold text-blue-900">EventSync</h1>
         </div>
 
-        {/* Botão Logout no Header com Ícone */}
         <div>
           {isAuthenticated ? (
             <button
               onClick={() => setIsLogoutModalOpen(true)}
               className="flex items-center gap-2 text-sm font-bold text-red-600 hover:bg-red-50 px-3 py-2 rounded-md transition-colors"
             >
-              <LogOut className="w-4 h-4" /> {/* Ícone adicionado */}
+              <LogOut className="w-4 h-4" />
               <span>Sair</span>
             </button>
           ) : (
@@ -164,9 +191,65 @@ export default function HomePage() {
         </div>
       </header>
 
-
       {/* --- FEED DE EVENTOS --- */}
       <main className="p-4 max-w-2xl mx-auto">
+        <div className="mb-6 space-y-3">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar eventos..."
+              className="w-full pl-10 p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button
+              onClick={() => setFilterType(undefined)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${!filterType ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setFilterType('free')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filterType === 'free' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+            >
+              Gratuitos
+            </button>
+            <button
+              onClick={() => setFilterType('paid')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filterType === 'paid' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+            >
+              Pagos
+            </button>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mt-2">
+            <button
+              onClick={() => setFilterStatus('published')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filterStatus === 'published' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+            >
+              Publicados
+            </button>
+            <button
+              onClick={() => setFilterStatus('finished')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filterStatus === 'finished' ? 'bg-gray-700 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+            >
+              Finalizados
+            </button>
+            <button
+              onClick={() => setFilterStatus('canceled')}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filterStatus === 'canceled' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+            >
+              Cancelados
+            </button>
+          </div>
+        </div>
+
         <h2 className="text-lg font-semibold text-gray-800 mb-4 ml-1">Próximos Eventos</h2>
 
         {loading ? (

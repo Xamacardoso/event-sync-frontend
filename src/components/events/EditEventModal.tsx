@@ -134,7 +134,10 @@ export const EditEventModal = ({ isOpen, onClose, onSave, event }: EditEventModa
                             type="number"
                             min="1"
                             value={formData.maxAttendees !== undefined ? String(formData.maxAttendees) : ''}
-                            onChange={(e) => handleChange('maxAttendees', parseInt(e.target.value))}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                handleChange('maxAttendees', isNaN(val) ? undefined : val);
+                            }}
                         />
                     </div>
                 </form>
