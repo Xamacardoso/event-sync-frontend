@@ -1,104 +1,103 @@
 'use client';
 
 import { useEffect, useState, useRef, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { socialService, Message, FriendUser } from '@/services/social';
-import { ArrowLeft, Send, User } from 'lucide-react';
+import { socialService, Message } from '@/services/social';
+import { ArrowLeft, Send, UserPlus } from 'lucide-react';
 import Link from 'next/link';
+import { eventService } from '@/services/events';
+import { Event } from '@/types';
+import { toast } from 'sonner';
 
-function ChatContent() {
+function EventChatContent() {
     const { user, isAuthenticated } = useAuth();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const friendId = searchParams.get('friendId');
+    const params = useParams();
+    const eventId = params.id as string;
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
-    const [friend, setFriend] = useState<FriendUser | null>(null);
+    const [event, setEvent] = useState<Event | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Redirecionar se não houver friendId
     useEffect(() => {
         if (!isAuthenticated) router.push('/login');
-        if (!friendId) router.push('/social');
-    }, [friendId, isAuthenticated, router]);
+    }, [isAuthenticated, router]);
 
-    // Carregar mensagens e infos do amigo
+    // Load Event Info
     useEffect(() => {
-        if (friendId) {
+        async function loadEvent() {
+            try {
+                const data = await eventService.getById(eventId);
+                setEvent(data);
+            } catch (error) {
+                console.error('Error loading event', error);
+            }
+        }
+        if (eventId) loadEvent();
+    }, [eventId]);
+
+    // Load Messages & Poll
+    useEffect(() => {
+        if (eventId) {
             loadChat();
-            // Polling simples para atualizar mensagens a cada 5s
             const interval = setInterval(loadChat, 5000);
             return () => clearInterval(interval);
         }
-    }, [friendId]);
+    }, [eventId]);
 
     const loadChat = async () => {
         try {
-            if (!friendId) return;
-            const msgs = await socialService.getMessages(friendId);
+            const msgs = await socialService.getEventMessages(eventId);
             setMessages(msgs);
-
-            // Tenta pegar o nome do amigo da lista (cache simples) ou poderia ter um endpoint específico
-            const friends = await socialService.getFriends();
-            const currentFriend = friends.find(f => f.id === friendId);
-            if (currentFriend) setFriend(currentFriend);
-
             setLoading(false);
         } catch (error) {
             console.error(error);
         }
     };
 
-    // Scroll para o fim
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !friendId) return;
+        if (!newMessage.trim()) return;
 
         try {
-            await socialService.sendMessage(friendId, newMessage);
+            await socialService.sendEventMessage(eventId, newMessage);
             setNewMessage('');
-            loadChat(); // Atualiza na hora
+            loadChat();
         } catch (error) {
             console.error(error);
         }
     };
 
-    if (loading) return <div className="p-4 text-center">Carregando chat...</div>;
+    const handleAddFriend = async (targetId: string) => {
+        try {
+            await socialService.sendRequest(targetId);
+            toast.success('Pedido de amizade enviado!');
+        } catch (error: any) {
+            console.error(error);
+            const msg = error.response?.data?.message || 'Erro ao enviar pedido.';
+            toast.error(msg);
+        }
+    };
+
+    if (loading) return <div className="p-4 text-center">Carregando Chat do Evento...</div>;
 
     return (
         <div className="flex flex-col h-screen bg-gray-50">
             {/* Header */}
             <div className="bg-white p-4 shadow-sm flex items-center gap-3 sticky top-0 z-10">
-                <button
-                    onClick={() => router.back()}
-                    className="text-gray-500 hover:text-blue-600 p-1 -ml-1 rounded-full hover:bg-gray-100"
-                    aria-label="Voltar"
-                >
+                <Link href={`/events/${eventId}`} className="text-gray-500 hover:text-blue-600">
                     <ArrowLeft className="w-6 h-6" />
-                </button>
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
-                        {friend?.photoUrl ? (
-                            <img src={friend.photoUrl} alt="F" className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                <User className="w-5 h-5" />
-                            </div>
-                        )}
-                    </div>
-                    <div>
-                        <h1 className="font-bold text-gray-900">{friend?.name || 'Usuário'}</h1>
-                        <span className="text-xs text-green-500 flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-green-500"></span> Online
-                        </span>
-                    </div>
+                </Link>
+                <div>
+                    <h1 className="font-bold text-gray-900">{event?.title || 'Chat do Evento'}</h1>
+                    <span className="text-xs text-gray-500">Chat Geral</span>
                 </div>
             </div>
 
@@ -106,20 +105,34 @@ function ChatContent() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.length === 0 && (
                     <div className="text-center text-gray-400 mt-10">
-                        <p>Comece a conversar com {friend?.name}!</p>
+                        <p>Seja o primeiro a mandar mensagem!</p>
                     </div>
                 )}
 
                 {messages.map((msg) => {
                     const isMe = msg.senderId === user?.id;
+                    const senderName = msg.sender?.name || 'Usuário';
+
                     return (
                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                             <div
-                                className={`max-w-[75%] px-4 py-2 rounded-2xl shadow-sm text-sm ${isMe
+                                className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-sm text-sm group ${isMe
                                     ? 'bg-blue-600 text-white rounded-tr-none'
                                     : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
                                     }`}
                             >
+                                {!isMe && (
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-xs font-bold text-gray-500">{senderName}</span>
+                                        <button
+                                            onClick={() => handleAddFriend(msg.senderId)}
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-gray-100 rounded-full text-blue-500"
+                                            title="Adicionar Amigo"
+                                        >
+                                            <UserPlus className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                )}
                                 <p>{msg.content}</p>
                                 <span className={`text-[10px] block mt-1 text-right ${isMe ? 'text-blue-200' : 'text-gray-400'}`}>
                                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -136,8 +149,8 @@ function ChatContent() {
                 <form onSubmit={handleSend} className="flex gap-2 max-w-2xl mx-auto">
                     <input
                         type="text"
-                        className="flex-1 bg-gray-100 border-0 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                        placeholder="Digite sua mensagem..."
+                        className="flex-1 bg-gray-100 border-0 rounded-full px-4 py-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900"
+                        placeholder="Mensagem para o evento..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                     />
@@ -154,10 +167,10 @@ function ChatContent() {
     );
 }
 
-export default function ChatPage() {
+export default function EventChatPage() {
     return (
-        <Suspense fallback={<div className="p-4 text-center">Carregando...</div>}>
-            <ChatContent />
+        <Suspense fallback={<div>Carregando...</div>}>
+            <EventChatContent />
         </Suspense>
     );
 }

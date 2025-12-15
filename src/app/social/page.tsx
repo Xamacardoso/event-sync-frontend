@@ -81,12 +81,18 @@ export default function SocialPage() {
                             {requests.map(req => (
                                 <div key={req.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                                     <div className="flex items-center gap-3">
-                                        <div className="bg-blue-100 p-2 rounded-full text-blue-600">
-                                            <User className="w-5 h-5" />
+                                        <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden shrink-0">
+                                            {req.requester?.photoUrl ? (
+                                                <img src={req.requester.photoUrl} alt={req.requester.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-blue-600 bg-blue-100">
+                                                    <User className="w-5 h-5" />
+                                                </div>
+                                            )}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-medium">Novo pedido!</p>
-                                            <p className="text-xs text-gray-500">Há pouco tempo</p>
+                                            <p className="text-sm font-bold text-gray-900">{req.requester?.name || 'Usuário Desconhecido'}</p>
+                                            <p className="text-xs text-gray-500">{req.requester?.city || 'Novo pedido de amizade'}</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-2">

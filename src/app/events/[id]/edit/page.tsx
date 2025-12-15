@@ -59,7 +59,7 @@ export default function EditEventPage() {
                 endDate: new Date(data.endDate).toISOString(),
             });
             toast.success('Evento atualizado com sucesso!');
-            router.push(`/events/${eventId}/manage`);
+            router.replace(`/events/${eventId}/manage`);
         } catch (error) {
             console.error(error);
             toast.error('Erro ao atualizar evento.');

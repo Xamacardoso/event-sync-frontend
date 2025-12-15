@@ -79,9 +79,9 @@ export default function OrganizerEventsPage() {
                       </span>
                     </div>
                     <span className={`inline-block px-2 py-1 text-xs font-bold rounded uppercase ${event.status === 'published' ? 'bg-green-100 text-green-700' :
-                        event.status === 'canceled' ? 'bg-red-100 text-red-700' :
-                          event.status === 'finished' ? 'bg-gray-100 text-gray-700 text-decoration-line-through' :
-                            'bg-yellow-100 text-yellow-700'
+                      event.status === 'canceled' ? 'bg-red-100 text-red-700' :
+                        event.status === 'finished' ? 'bg-gray-100 text-gray-700 text-decoration-line-through' :
+                          'bg-yellow-100 text-yellow-700'
                       }`}>
                       {
                         event.status === 'published' ? 'Publicado' :
@@ -93,7 +93,7 @@ export default function OrganizerEventsPage() {
                   </div>
 
                   <Link
-                    href={`/events/${event.id}/manage`}
+                    href={`/events/${event.id}/manage?from=/organizer/my-events`}
                     className="text-sm bg-gray-100 text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100 transition-colors"
                   >
                     Gerenciar

@@ -17,6 +17,7 @@ export interface Registration {
   };
 
   user?: {
+    id: string;
     name: string;
     email: string;
   };

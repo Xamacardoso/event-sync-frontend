@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { registrationService, Registration } from '@/services/registrations';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -23,9 +23,11 @@ import { Event, CreateEventDTO } from '@/types';
 export default function ManageEventPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
 
   const eventId = params.id as string;
+  const backLink = searchParams.get('from') || '/organizer/my-events';
 
   // Estados Gerais
   const [activeTab, setActiveTab] = useState<'approvals' | 'checkin' | 'settings'>('approvals');
@@ -176,7 +178,6 @@ export default function ManageEventPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
 
-      {/* 6. Componente do Modal de Confirmação */}
       <ConfirmationModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
@@ -192,7 +193,7 @@ export default function ManageEventPage() {
       {/* Header com Navegação */}
       <div className="bg-white shadow-sm sticky top-0 z-20">
         <div className="p-4 border-b border-gray-100 flex items-center">
-          <Link href="#" onClick={(e) => { e.preventDefault(); router.back(); }} className="mr-4 text-gray-500 hover:text-blue-600">
+          <Link href={backLink} className="mr-4 text-gray-500 hover:text-blue-600">
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <h1 className="text-xl font-bold text-blue-900">Gerenciar Evento</h1>
@@ -293,7 +294,7 @@ export default function ManageEventPage() {
                   <input
                     type="text"
                     placeholder="Filtrar por nome ou email..."
-                    className="text-black w-full pl-10 p-3 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="text-black w-full pl-10 p-3 rounded-lg border border-gray-200 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                   />
@@ -404,7 +405,7 @@ export default function ManageEventPage() {
                   <input
                     type="text"
                     placeholder="Filtrar ticket por nome do participante..."
-                    className="text-black w-full pl-10 p-3 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="text-black w-full pl-10 p-3 rounded-lg border border-gray-200 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                   />

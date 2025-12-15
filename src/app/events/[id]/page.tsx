@@ -11,6 +11,128 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { socialService } from '@/services/social';
+import { Input } from '@/components/ui/Input';
+import { UserPlus, Check, Users, Search, X } from 'lucide-react';
+
+function ParticipantsSection({ eventId }: { eventId: string }) {
+  const { user } = useAuth();
+  const [participants, setParticipants] = useState<Registration[]>([]);
+  const [filter, setFilter] = useState('');
+  const [statusMap, setStatusMap] = useState<Record<string, 'none' | 'pending' | 'friend'>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, [eventId]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [regs, friends, pendingReqs] = await Promise.all([
+        registrationService.getEventRegistrations(eventId).catch(() => []),
+        socialService.getFriends().catch(() => []),
+        socialService.getPendingRequests().catch(() => [])
+      ]);
+
+      const active = regs.filter(r => ['approved', 'checked_in'].includes(r.status));
+      setParticipants(active);
+
+      const newStatusMap: Record<string, 'none' | 'pending' | 'friend'> = {};
+      friends.forEach((f: any) => newStatusMap[f.id] = 'friend');
+
+      // Check both sent and received
+      pendingReqs.forEach((r: any) => {
+        if (r.requesterId === user?.id) newStatusMap[r.recipientId] = 'pending';
+        if (r.recipientId === user?.id) newStatusMap[r.requesterId] = 'pending';
+      });
+
+      setStatusMap(newStatusMap);
+
+    } catch (error) {
+      console.log('Erro ao carregar dados participantes.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddFriend = async (targetUserId: string) => {
+    try {
+      await socialService.sendRequest(targetUserId);
+      setStatusMap(prev => ({ ...prev, [targetUserId]: 'pending' }));
+      toast.success('Pedido enviado!');
+    } catch (error: any) {
+      toast.error('Erro ao enviar pedido.');
+    }
+  };
+
+  const filtered = participants.filter(p =>
+    p.user?.name.toLowerCase().includes(filter.toLowerCase()) &&
+    p.user?.id !== user?.id
+  );
+
+  if (loading) return <div className="p-6 text-center text-gray-400">Carregando participantes...</div>;
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div className="flex items-center gap-2 mb-4">
+        <Users className="w-5 h-5 text-blue-600" />
+        <h2 className="text-lg font-bold text-gray-900">Participantes ({filtered.length})</h2>
+      </div>
+
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Buscar pessoas..."
+          className="text-black w-full pl-10 p-3 rounded-lg border border-gray-200 bg-gray-50 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+      </div>
+
+      <div className="grid gap-3 max-h-96 overflow-y-auto pr-2">
+        {filtered.length === 0 ? (
+          <p className="text-gray-500 text-center py-4">Nenhum participante encontrado.</p>
+        ) : (
+          filtered.map((reg) => (
+            <div key={reg.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                  {reg.user?.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">{reg.user?.name}</p>
+                </div>
+              </div>
+
+              {/* Botão de Adicionar */}
+              <div className="flex items-center gap-2">
+                {statusMap[reg.userId] === 'friend' ? (
+                  <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Amigo
+                  </span>
+                ) : statusMap[reg.userId] === 'pending' ? (
+                  <span className="text-xs font-bold text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
+                    Pendente
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleAddFriend(reg.userId)}
+                    className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
+                    title="Adicionar Amigo"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function EventDetailsPage() {
   const params = useParams();
@@ -173,6 +295,9 @@ export default function EventDetailsPage() {
           <h2 className="text-lg font-bold text-gray-900 mb-4">Sobre</h2>
           <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
         </div>
+
+        {/* Participantes */}
+        <ParticipantsSection eventId={event.id} />
       </main>
 
       <div className="fixed bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200 z-20">
@@ -180,7 +305,7 @@ export default function EventDetailsPage() {
           {user?.id === event.organizerId ? (
             <div className="flex gap-3">
               <Link
-                href={`/events/${event.id}/manage`}
+                href={`/events/${event.id}/manage?from=/events/${event.id}`}
                 className="w-full flex justify-center items-center bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 transition-colors"
               >
                 Gerenciar Evento

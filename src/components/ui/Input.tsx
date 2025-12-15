@@ -14,9 +14,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <label className="text-sm font-medium text-gray-700">{label}</label>
         <input
           ref={ref}
-          className={`text-black p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
-            error ? 'border-red-500' : 'border-gray-300' 
-          } ${className}`}
+          className={`text-black p-3 border rounded-lg bg-gray-50 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${error ? 'border-red-500' : 'border-gray-300'
+            } ${className}`}
           {...props}
         />
         {error && <span className="text-xs text-red-500">{error}</span>}

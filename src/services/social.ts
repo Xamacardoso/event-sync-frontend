@@ -3,6 +3,7 @@ import api from './api';
 export interface FriendRequest {
     id: string;
     requesterId: string;
+    requester: FriendUser;
     recipientId: string;
     status: 'pending' | 'accepted' | 'rejected';
     timestamp: string;
@@ -18,6 +19,7 @@ export interface FriendUser {
 export interface Message {
     id: string;
     senderId: string;
+    sender?: { name: string; photoUrl?: string };
     recipientId: string;
     content: string;
     timestamp: string;
@@ -57,6 +59,17 @@ export const socialService = {
     // Obter Mensagens
     getMessages: async (friendId: string) => {
         const response = await api.get<Message[]>(`/social/messages/${friendId}`);
+        return response.data;
+    },
+
+    // Event Chat
+    getEventMessages: async (eventId: string) => {
+        const response = await api.get<Message[]>(`/social/events/${eventId}/chat`);
+        return response.data;
+    },
+
+    sendEventMessage: async (eventId: string, content: string) => {
+        const response = await api.post(`/social/events/${eventId}/chat`, { content });
         return response.data;
     }
 };
