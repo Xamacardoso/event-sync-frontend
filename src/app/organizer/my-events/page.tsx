@@ -64,10 +64,14 @@ export default function OrganizerEventsPage() {
         ) : events.length > 0 ? (
           <div className="space-y-4">
             {events.map((event) => (
-              <div key={event.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div
+                key={event.id}
+                className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group"
+                onClick={() => router.push(`/events/${event.id}`)}
+              >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900 mb-1">{event.title}</h2>
+                    <h2 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">{event.title}</h2>
                     <div className="flex flex-col sm:flex-row gap-2 text-sm text-gray-500 mb-3">
                       <span className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1 text-blue-500" />
@@ -94,7 +98,8 @@ export default function OrganizerEventsPage() {
 
                   <Link
                     href={`/events/${event.id}/manage?from=/organizer/my-events`}
-                    className="text-sm bg-gray-100 text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100 transition-colors"
+                    className="text-sm bg-gray-100 text-blue-700 px-4 py-2 rounded-lg font-semibold hover:bg-blue-100 transition-colors z-10"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     Gerenciar
                   </Link>

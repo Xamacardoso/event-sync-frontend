@@ -30,13 +30,12 @@ function ParticipantsSection({ eventId }: { eventId: string }) {
     try {
       setLoading(true);
       const [regs, friends, pendingReqs] = await Promise.all([
-        registrationService.getEventRegistrations(eventId).catch(() => []),
+        registrationService.getEventParticipants(eventId).catch(() => []),
         socialService.getFriends().catch(() => []),
         socialService.getPendingRequests().catch(() => [])
       ]);
 
-      const active = regs.filter(r => ['approved', 'checked_in'].includes(r.status));
-      setParticipants(active);
+      setParticipants(regs);
 
       const newStatusMap: Record<string, 'none' | 'pending' | 'friend'> = {};
       friends.forEach((f: any) => newStatusMap[f.id] = 'friend');

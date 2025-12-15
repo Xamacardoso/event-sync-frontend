@@ -5,6 +5,7 @@ export interface FriendRequest {
     requesterId: string;
     requester: FriendUser;
     recipientId: string;
+    recipient?: FriendUser;
     status: 'pending' | 'accepted' | 'rejected';
     timestamp: string;
 }
@@ -47,6 +48,18 @@ export const socialService = {
     // Listar Pedidos Pendentes
     getPendingRequests: async () => {
         const response = await api.get<FriendRequest[]>('/social/requests/pending');
+        return response.data;
+    },
+
+    // Listar Pedidos Enviados
+    getSentRequests: async () => {
+        const response = await api.get<FriendRequest[]>('/social/requests/sent');
+        return response.data;
+    },
+
+    // Remover Amizade ou Cancelar
+    removeFriendship: async (friendId: string) => {
+        const response = await api.delete(`/social/friendships/${friendId}`);
         return response.data;
     },
 

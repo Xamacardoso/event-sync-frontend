@@ -1,7 +1,10 @@
+'use client';
+
 import { useState } from 'react';
 import { Registration, registrationService } from '@/services/registrations';
 import { Calendar, MapPin, Clock, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
 import { toast } from 'sonner';
 
@@ -11,6 +14,7 @@ interface RegistrationCardProps {
 }
 
 export const RegistrationCard = ({ registration, onRegistrationCancelled }: RegistrationCardProps) => {
+  const router = useRouter();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
 
@@ -63,7 +67,10 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
 
   return (
     <>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row relative">
+      <div
+        className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row relative cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => router.push(`/events/${registration.eventId}`)}
+      >
         {event.status === 'canceled' && (
           <div className="absolute top-0 inset-x-0 bg-red-600/10 text-red-600 text-[10px] font-bold text-center py-0.5 border-b border-red-100 z-10">
             EVENTO CANCELADO
@@ -94,7 +101,7 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
             <div className='flex gap-2'>
               {canCancel && (
                 <button
-                  onClick={() => setIsCancelModalOpen(true)}
+                  onClick={(e) => { e.stopPropagation(); setIsCancelModalOpen(true); }}
                   className="bg-red-600 text-white hover:bg-red-700 px-3 py-2 rounded-lg text-sm flex items-center gap-1 font-medium transition-colors shadow-sm"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -109,6 +116,7 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
                   <Link
                     href={`/my-tickets/${registration.id}`} // Futura página do QR Code
                     className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     Ver Ingresso / QR Code
                   </Link>
@@ -116,6 +124,7 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
                   <Link
                     href={`/events/${registration.eventId}`}
                     className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     Inscrever-se Novamente
                   </Link>
@@ -123,6 +132,7 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
                   <Link
                     href={`/events/${registration.eventId}`}
                     className="text-sm text-blue-600 hover:underline font-medium"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     Ver Detalhes do Evento
                   </Link>

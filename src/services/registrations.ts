@@ -48,6 +48,13 @@ export const registrationService = {
     return response.data;
   },
 
+  // Lista participantes públicos de um evento
+  getEventParticipants: async (eventId: string) => {
+    const response = await api.get<Registration[]>(`/events/${eventId}/participants`);
+    return response.data;
+  },
+
+
   // Atualiza o status (Aprovar/Recusar)
   updateStatus: async (registrationId: string, status: 'approved' | 'rejected') => {
     const response = await api.patch(`/registrations/${registrationId}/status`, { status });
