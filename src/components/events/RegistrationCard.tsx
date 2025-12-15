@@ -35,7 +35,7 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
       case 'pending': return 'Aguardando Aprovação';
       case 'rejected': return 'Recusado';
       case 'checked_in': return 'Presença Confirmada';
-      case 'canceled': return 'Cancelado';
+      case 'canceled': return 'Inscrição Cancelada';
       default: return 'Desconhecido';
     }
   };
@@ -104,21 +104,30 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
             </div>
 
             <div className="flex gap-2">
-              {registration.status === 'approved' || registration.status === 'checked_in' ? (
-                <Link
-                  href={`/my-tickets/${registration.id}`} // Futura página do QR Code
-                  className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  Ver Ingresso / QR Code
-                </Link>
-              ) : (
-                <Link
-                  href={`/events/${registration.eventId}`}
-                  className="text-sm text-blue-600 hover:underline font-medium"
-                >
-                  Ver Detalhes do Evento
-                </Link>
-              )}
+              <div className="flex gap-2">
+                {registration.status === 'approved' || registration.status === 'checked_in' ? (
+                  <Link
+                    href={`/my-tickets/${registration.id}`} // Futura página do QR Code
+                    className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    Ver Ingresso / QR Code
+                  </Link>
+                ) : registration.status === 'canceled' && event.status !== 'canceled' ? (
+                  <Link
+                    href={`/events/${registration.eventId}`}
+                    className="text-sm bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                  >
+                    Inscrever-se Novamente
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/events/${registration.eventId}`}
+                    className="text-sm text-blue-600 hover:underline font-medium"
+                  >
+                    Ver Detalhes do Evento
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
