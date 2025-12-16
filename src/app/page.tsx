@@ -3,16 +3,26 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { eventService } from '@/services/events';
+import { userService } from '@/services/users'; // Import userService
 import { Event } from '@/types';
 import { EventCard } from '@/components/events/EventCard';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'; // <--- Import do Modal
-import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays, Search, Filter } from 'lucide-react';
+import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays, Search, Filter, Users } from 'lucide-react'; // Add Users
 import Link from 'next/link';
 
 export default function HomePage() {
   const { user, logout, isAuthenticated } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      userService.getProfile()
+        .then(data => setProfilePhoto(data.photoUrl || null))
+        .catch(err => console.error("Failed to load profile photo"));
+    }
+  }, [isAuthenticated]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<undefined | 'free' | 'paid'>(undefined);
@@ -88,15 +98,25 @@ export default function HomePage() {
         <div className="p-4 flex flex-col h-[calc(100%-80px)] justify-between">
           <div className="space-y-2">
             {isAuthenticated && user && (
-              <div className="mb-6 p-3 bg-blue-50 rounded-lg flex items-center gap-3">
-                <div className="bg-blue-200 p-2 rounded-full text-blue-700">
-                  <User className="w-5 h-5" />
+              <Link
+                href="/profile"
+                onClick={toggleSidebar}
+                className="mb-6 p-3 bg-blue-50 rounded-lg flex items-center gap-3 hover:bg-blue-100 transition-colors cursor-pointer group"
+              >
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-200 group-hover:border-blue-300">
+                  {profilePhoto ? (
+                    <img src={profilePhoto} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-blue-200 flex items-center justify-center text-blue-700">
+                      <User className="w-6 h-6" />
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900">{user.name}</p>
+                  <p className="text-sm font-bold text-gray-900 group-hover:text-blue-900">{user.name}</p>
                   <p className="text-xs text-gray-500 capitalize">{user.role}</p>
                 </div>
-              </div>
+              </Link>
             )}
 
             <nav className="space-y-1">
@@ -110,20 +130,11 @@ export default function HomePage() {
               </Link>
 
               <Link
-                href="/profile"
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
-                onClick={toggleSidebar}
-              >
-                <User className="w-5 h-5 text-blue-500" />
-                Meu Perfil
-              </Link>
-
-              <Link
                 href="/social"
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 rounded-lg hover:bg-gray-100 font-medium"
                 onClick={toggleSidebar}
               >
-                <User className="w-5 h-5 text-blue-500" />
+                <Users className="w-5 h-5 text-blue-500" />
                 Rede Social
               </Link>
 
