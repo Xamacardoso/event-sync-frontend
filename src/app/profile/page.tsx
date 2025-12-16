@@ -109,6 +109,13 @@ export default function ProfilePage() {
 
                     {/* Header Visual */}
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-32 relative">
+                        {profile?.role === 'organizer' && (
+                            <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-white/10 shadow-lg">
+                                <span className="text-yellow-300 text-lg">★</span>
+                                <span className="text-white font-bold text-lg">{profile.organizerRating ? Number(profile.organizerRating).toFixed(1) : '0.0'}</span>
+                                <span className="text-blue-100 text-xs font-medium uppercase tracking-wide">Organizador</span>
+                            </div>
+                        )}
                         <div className="absolute -bottom-12 left-8">
                             <div className="w-24 h-24 bg-white rounded-full p-1 shadow-md">
                                 {formData.photoUrl ? (

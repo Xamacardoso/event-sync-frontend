@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { eventService } from '@/services/events';
 import { registrationService, Registration } from '@/services/registrations'; // Novo serviço
 import { Event } from '@/types';
-import { Calendar, MapPin, ArrowLeft, Clock, DollarSign, CheckCircle, AlertTriangle, QrCode, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Clock, DollarSign, CheckCircle, AlertTriangle, QrCode, Trash2, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
@@ -66,8 +66,7 @@ function ParticipantsSection({ eventId }: { eventId: string }) {
   };
 
   const filtered = participants.filter(p =>
-    p.user?.name.toLowerCase().includes(filter.toLowerCase()) &&
-    p.user?.id !== user?.id
+    p.user?.name.toLowerCase().includes(filter.toLowerCase())
   );
 
   if (loading) return <div className="p-6 text-center text-gray-400">Carregando participantes...</div>;
@@ -105,15 +104,30 @@ function ParticipantsSection({ eventId }: { eventId: string }) {
                 </div>
               </div>
 
-              {/* Botão de Adicionar */}
+              {/* Botão de Adicionar / Ações */}
               <div className="flex items-center gap-2">
-                {statusMap[reg.userId] === 'friend' ? (
-                  <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded flex items-center gap-1">
-                    <Check className="w-3 h-3" /> Amigo
+                {reg.userId === user?.id ? (
+                  <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                    Você
                   </span>
+                ) : statusMap[reg.userId] === 'friend' ? (
+                  <>
+                    <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded flex items-center gap-1" title="Amigo">
+                      <Check className="w-3 h-3" />
+                      <span className="hidden sm:inline">Amigo</span>
+                    </span>
+                    <Link
+                      href={`/social/chat?friendId=${reg.userId}`}
+                      className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-colors"
+                      title="Enviar Mensagem"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </Link>
+                  </>
                 ) : statusMap[reg.userId] === 'pending' ? (
-                  <span className="text-xs font-bold text-yellow-600 bg-yellow-100 px-2 py-1 rounded">
-                    Pendente
+                  <span className="text-xs font-bold text-yellow-600 bg-yellow-100 px-2 py-1 rounded flex items-center gap-1" title="Solicitação Pendente">
+                    <Users className="w-3 h-3" />
+                    <Clock className="w-3 h-3" />
                   </span>
                 ) : (
                   <button
@@ -144,6 +158,30 @@ export default function EventDetailsPage() {
   const [myRegistration, setMyRegistration] = useState<Registration | null>(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
+
+  // Review State
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [reviewing, setReviewing] = useState(false);
+
+  // Review Handler
+  const handleReview = async () => {
+    if (!event) return;
+    setReviewing(true);
+    try {
+      // @ts-ignore
+      const { reviewsService } = await import('@/services/reviews');
+      await reviewsService.create({ eventId: event.id, rating, comment });
+      toast.success("Avaliação enviada com sucesso!");
+      setIsReviewModalOpen(false);
+      loadEvent(event.id); // Reload to update UI potentially
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Erro ao avaliar.');
+    } finally {
+      setReviewing(false);
+    }
+  };
 
   // 1. Carrega dados do evento
   const loadEvent = useCallback(async (id: string) => {
@@ -312,7 +350,7 @@ export default function EventDetailsPage() {
               <p className="font-bold text-gray-900 text-lg">{(event as any).organizer?.name || 'Organizador Desconhecido'}</p>
               {/* Rating placeholder - would need actual field from backend */}
               <p className="text-sm text-yellow-500 flex items-center gap-1 font-medium">
-                ★ 4.8 <span className="text-gray-400 font-normal text-xs">(12 avaliações)</span>
+                ★ {(event as any).organizer?.organizerRating ? Number((event as any).organizer.organizerRating).toFixed(1) : 'Novo'}
               </p>
             </div>
           </div>
@@ -370,13 +408,31 @@ export default function EventDetailsPage() {
                 </div>
               ) : (
                 // Caso contrário (Não inscrito, Recusado ou Cancelado -> Pode tentar de novo)
-                <Button
-                  onClick={handleSubscribe}
-                  disabled={submitting}
-                  className={`w-full text-lg py-4 flex justify-center items-center ${getButtonClasses()}`}
-                >
-                  {submitting ? 'Processando...' : getButtonContent()}
-                </Button>
+                <>
+                  {event.status === 'finished' ? (
+                    myRegistration?.status === 'checked_in' ? (
+                      <button
+                        onClick={() => setIsReviewModalOpen(true)}
+                        className="w-full text-lg py-4 flex justify-center items-center bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition-colors shadow-lg shadow-purple-200"
+                      >
+                        <Star className="w-5 h-5 mr-2" />
+                        Avaliar Evento
+                      </button>
+                    ) : (
+                      <div className="w-full py-4 text-center bg-gray-200 text-gray-500 font-bold rounded-lg cursor-not-allowed">
+                        Evento Finalizado
+                      </div>
+                    )
+                  ) : (
+                    <Button
+                      onClick={handleSubscribe}
+                      disabled={submitting}
+                      className={`w-full text-lg py-4 flex justify-center items-center ${getButtonClasses()}`}
+                    >
+                      {submitting ? 'Processando...' : getButtonContent()}
+                    </Button>
+                  )}
+                </>
               )}
             </>
           )}
@@ -393,6 +449,52 @@ export default function EventDetailsPage() {
         variant="danger"
         isLoading={canceling}
       />
-    </div >
+
+      {/* Modal de Avaliação */}
+      {isReviewModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md animate-in fade-in zoom-in duration-200">
+            <h3 className="text-xl font-bold mb-4 text-gray-900">Avaliar Evento</h3>
+
+            <div className="flex justify-center gap-2 mb-6">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className={`transition-transform hover:scale-110 ${star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                >
+                  {/* @ts-ignore */}
+                  <Star className="w-8 h-8 fill-inherit" />
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              className="w-full p-3 border rounded-lg mb-4 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900"
+              placeholder="Escreva um comentário (opcional)..."
+              rows={4}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setIsReviewModalOpen(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleReview}
+                disabled={reviewing}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {reviewing ? 'Enviando...' : 'Enviar Avaliação'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
