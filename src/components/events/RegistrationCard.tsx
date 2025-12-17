@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { Registration, registrationService } from '@/services/registrations';
-import { Calendar, MapPin, Clock, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, CheckCircle, XCircle, Trash2, Award } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ConfirmationModal } from '../ui/ConfirmationModal';
+import { CertificateModal } from './CertificateModal';
 import { toast } from 'sonner';
 
 interface RegistrationCardProps {
@@ -16,6 +17,7 @@ interface RegistrationCardProps {
 export const RegistrationCard = ({ registration, onRegistrationCancelled }: RegistrationCardProps) => {
   const router = useRouter();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
 
   // Se o backend não retornar o evento, evitamos erro (mas a tela ficará vazia)
@@ -23,23 +25,36 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
   if (!event) return null;
 
   const getStatusStyle = () => {
+    if (registration.status === 'canceled') return 'bg-gray-100 text-gray-500 border-gray-200';
+
+    if (event.status === 'finished' || (event.endDate && new Date(event.endDate) < new Date())) {
+      return 'bg-slate-800 text-white border-slate-900';
+    }
+
     switch (registration.status) {
       case 'approved': return 'bg-green-100 text-green-700 border-green-200';
       case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
       case 'checked_in': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'canceled': return 'bg-gray-100 text-gray-500 border-gray-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
   const getStatusLabel = () => {
+    // Se o evento já acabou, mostra como Finalizado (independente do status da inscrição, visualmente ajuda)
+    // Mas se a inscrição foi cancelada, 'Cancelada' tem prioridade.
+    if (registration.status === 'canceled') return 'Inscrição Cancelada';
+
+    // Verifica se evento acabou
+    if (event.status === 'finished' || (event.endDate && new Date(event.endDate) < new Date())) {
+      return 'Finalizado';
+    }
+
     switch (registration.status) {
       case 'approved': return 'Confirmado';
       case 'pending': return 'Aguardando Aprovação';
       case 'rejected': return 'Recusado';
       case 'checked_in': return 'Presença Confirmada';
-      case 'canceled': return 'Inscrição Cancelada';
       default: return 'Desconhecido';
     }
   };
@@ -64,6 +79,10 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
   });
 
   const canCancel = registration.status === 'pending' || registration.status === 'approved';
+
+  // Lógica para certificado: check-in e evento finalizado
+  const isEventFinished = event.endDate && new Date(event.endDate) < new Date();
+  const canGetCertificate = registration.status === 'checked_in' && isEventFinished;
 
   return (
     <>
@@ -112,6 +131,16 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
 
             <div className="flex gap-2">
               <div className="flex gap-2">
+                {canGetCertificate ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setIsCertificateModalOpen(true); }}
+                    className="text-sm bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-700 transition-colors flex items-center gap-2"
+                  >
+                    <Award className="w-4 h-4" />
+                    Emitir Certificado
+                  </button>
+                ) : null}
+
                 {registration.status === 'approved' || registration.status === 'checked_in' ? (
                   <Link
                     href={`/my-tickets/${registration.id}`} // Futura página do QR Code
@@ -152,6 +181,12 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
         confirmText="Sim, Cancelar"
         variant="danger"
         isLoading={canceling}
+      />
+
+      <CertificateModal
+        isOpen={isCertificateModalOpen}
+        onClose={() => setIsCertificateModalOpen(false)}
+        registrationId={registration.id}
       />
     </>
   );

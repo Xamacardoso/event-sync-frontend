@@ -14,10 +14,13 @@ function ChatContent() {
     const friendId = searchParams.get('friendId');
 
     const [messages, setMessages] = useState<Message[]>([]);
+    const [friend, setFriend] = useState<FriendUser | null>(null);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
-    const [friend, setFriend] = useState<FriendUser | null>(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const isUserNearBottomRef = useRef(true); // Rastreia se o usuário estava no fim antes da atualização
 
     // Redirecionar se não houver friendId
     useEffect(() => {
@@ -52,10 +55,31 @@ function ChatContent() {
         }
     };
 
-    // Scroll para o fim
+    // Monitora o scroll para mostrar/esconder botão
+    const handleScroll = () => {
+        if (!scrollContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+
+        // Se a distância do fundo for maior que 100px, mostra o botão
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+        setShowScrollButton(!isNearBottom);
+        isUserNearBottomRef.current = isNearBottom;
+    };
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); // Botão manual pode ser smooth
+        setShowScrollButton(false);
+    };
+
+    // Auto-scroll inteligente: só rola se o usuário já estiver no fim ou for o carregamento inicial
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+        if (!loading) {
+            // Se for carregamento inicial ou usuário já estava no fim, rola pro fim
+            if (isUserNearBottomRef.current) {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+            }
+        }
+    }, [messages, loading]);
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -64,6 +88,7 @@ function ChatContent() {
         try {
             await socialService.sendMessage(friendId, newMessage);
             setNewMessage('');
+            isUserNearBottomRef.current = true; // Força scroll ao enviar
             loadChat(); // Atualiza na hora
         } catch (error) {
             console.error(error);
@@ -103,7 +128,11 @@ function ChatContent() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div
+                className="flex-1 overflow-y-auto p-4 space-y-4 relative"
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+            >
                 {messages.length === 0 && (
                     <div className="text-center text-gray-400 mt-10">
                         <p>Comece a conversar com {friend?.name}!</p>
@@ -129,6 +158,17 @@ function ChatContent() {
                     );
                 })}
                 <div ref={messagesEndRef} />
+
+                {/* Scroll Down Button */}
+                <button
+                    onClick={scrollToBottom}
+                    className={`fixed bottom-24 right-6 p-3 bg-white text-blue-600 rounded-full shadow-lg border border-gray-100 transition-all duration-300 transform hover:bg-gray-50 z-20 ${showScrollButton
+                        ? 'opacity-100 translate-y-0'
+                        : 'opacity-0 translate-y-10 pointer-events-none'
+                        }`}
+                >
+                    <ArrowLeft className="w-5 h-5 -rotate-90" />
+                </button>
             </div>
 
             {/* Input Area */}

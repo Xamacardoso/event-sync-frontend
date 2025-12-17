@@ -4,11 +4,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { eventService } from '@/services/events';
 import { registrationService, Registration } from '@/services/registrations'; // Novo serviço
+import { reviewsService, CreateReviewDTO } from '@/services/reviews';
 import { Event } from '@/types';
-import { Calendar, MapPin, ArrowLeft, Clock, DollarSign, CheckCircle, AlertTriangle, QrCode, Trash2, Star, MessageSquare } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Clock, DollarSign, CheckCircle, AlertTriangle, QrCode, Trash2, Star, MessageSquare, Award } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { CertificateModal } from '@/components/events/CertificateModal';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { socialService } from '@/services/social';
@@ -159,27 +161,39 @@ export default function EventDetailsPage() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
 
+  // Certificate State
+  const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
+
   // Review State
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [reviewing, setReviewing] = useState(false);
+  const [myReview, setMyReview] = useState<{ id: string, rating: number, comment?: string } | null>(null);
 
   // Review Handler
   const handleReview = async () => {
     if (!event) return;
     setReviewing(true);
     try {
-      // @ts-ignore
-      const { reviewsService } = await import('@/services/reviews');
       await reviewsService.create({ eventId: event.id, rating, comment });
       toast.success("Avaliação enviada com sucesso!");
       setIsReviewModalOpen(false);
-      loadEvent(event.id); // Reload to update UI potentially
+      loadReview(event.id); // Reload review
+      loadEvent(event.id); // Reload event (update organizer rating maybe)
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Erro ao avaliar.');
     } finally {
       setReviewing(false);
+    }
+  };
+
+  const loadReview = async (eventId: string) => {
+    try {
+      const review = await reviewsService.getMyReview(eventId);
+      setMyReview(review);
+    } catch (error) {
+      console.log('Sem avaliação anterior.');
     }
   };
 
@@ -212,9 +226,12 @@ export default function EventDetailsPage() {
     const eventId = params.id as string;
     if (eventId) {
       loadEvent(eventId);
-      checkRegistrationStatus(eventId);
+      if (isAuthenticated) {
+        checkRegistrationStatus(eventId);
+        loadReview(eventId);
+      }
     }
-  }, [params.id, loadEvent, checkRegistrationStatus]);
+  }, [params.id, isAuthenticated, loadEvent, checkRegistrationStatus]);
 
   // 3. Ação de Inscrever-se
   const handleSubscribe = async () => {
@@ -411,13 +428,35 @@ export default function EventDetailsPage() {
                 <>
                   {event.status === 'finished' ? (
                     myRegistration?.status === 'checked_in' ? (
-                      <button
-                        onClick={() => setIsReviewModalOpen(true)}
-                        className="w-full text-lg py-4 flex justify-center items-center bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition-colors shadow-lg shadow-purple-200"
-                      >
-                        <Star className="w-5 h-5 mr-2" />
-                        Avaliar Evento
-                      </button>
+                      <div className="flex gap-3">
+                        {!myReview ? (
+                          <button
+                            onClick={() => setIsReviewModalOpen(true)}
+                            className="flex-1 text-lg py-4 flex justify-center items-center bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition-colors shadow-lg shadow-purple-200"
+                          >
+                            <Star className="w-5 h-5 mr-2" />
+                            Avaliar Evento
+                          </button>
+                        ) : (
+                          <div className="flex-1 bg-gray-100 border border-gray-200 rounded-lg p-3 text-center">
+                            <p className="text-sm text-gray-500 font-semibold">Sua Avaliação</p>
+                            <div className="flex justify-center text-yellow-500 my-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className={`w-4 h-4 ${i < myReview.rating ? 'fill-current' : 'text-gray-300'}`} />
+                              ))}
+                            </div>
+                            {myReview.comment && <p className="text-sm text-gray-700 italic">"{myReview.comment}"</p>}
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => setIsCertificateModalOpen(true)}
+                          className="flex-1 text-lg py-4 flex justify-center items-center bg-blue-800 hover:bg-blue-900 text-white rounded-lg font-bold transition-colors shadow-lg shadow-blue-200"
+                        >
+                          <Award className="w-5 h-5 mr-2" />
+                          Certificado
+                        </button>
+                      </div>
                     ) : (
                       <div className="w-full py-4 text-center bg-gray-200 text-gray-500 font-bold rounded-lg cursor-not-allowed">
                         Evento Finalizado
@@ -449,6 +488,15 @@ export default function EventDetailsPage() {
         variant="danger"
         isLoading={canceling}
       />
+
+      {/* Modal de Certificado */}
+      {myRegistration && (
+        <CertificateModal
+          isOpen={isCertificateModalOpen}
+          onClose={() => setIsCertificateModalOpen(false)}
+          registrationId={myRegistration.id}
+        />
+      )}
 
       {/* Modal de Avaliação */}
       {isReviewModalOpen && (

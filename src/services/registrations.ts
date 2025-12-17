@@ -12,6 +12,8 @@ export interface Registration {
   event?: {
     title: string;
     startDate: string;
+    endDate: string;
+    workloadHours?: number;
     localAddress?: string;
     status: 'draft' | 'published' | 'finished' | 'canceled';
   };
@@ -21,6 +23,14 @@ export interface Registration {
     name: string;
     email: string;
   };
+}
+
+export interface CertificateData {
+  participantName: string;
+  eventName: string;
+  workloadHours: number;
+  date: string;
+  validationCode: string;
 }
 
 export const registrationService = {
@@ -64,6 +74,11 @@ export const registrationService = {
   checkIn: async (registrationId: string, method: 'manual' | 'qr' = 'qr') => {
     // Supondo que sua rota no backend seja PATCH /registrations/:id/check-in
     const response = await api.post(`/registrations/${registrationId}/check-in`, { method });
+    return response.data;
+  },
+
+  getCertificate: async (registrationId: string) => {
+    const response = await api.get<CertificateData>(`/registrations/${registrationId}/certificate`);
     return response.data;
   }
 };

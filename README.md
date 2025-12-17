@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Event Sync Frontend
 
-## Getting Started
+Bem-vindo ao **Event Sync Frontend**! Esta é uma aplicação web moderna construída com **Next.js 15+ (App Router)** e **React**, projetada para oferecer uma experiência de usuário fluida para o gerenciamento de eventos.
 
-First, run the development server:
+## 🛠️ Tecnologias Principais e Bibliotecas
+
+- **Framework:** [Next.js](https://nextjs.org/) (App Router)
+- **Biblioteca:** [React](https://react.dev/)
+- **Estilização:** [Tailwind CSS](https://tailwindcss.com/)
+- **Ícones:** [Lucide React](https://lucide.dev/)
+- **Formulários:** [React Hook Form](https://react-hook-form.com/)
+- **Validação:** [Zod](https://zod.dev/)
+- **Cliente HTTP:** [Axios](https://axios-http.com/)
+- **Notificações Toast:** [Sonner](https://sonner.emilkowal.ski/)
+- **QR Code:** `react-qr-code` e `@yudiel/react-qr-scanner`
+- **Impressão:** `react-to-print` (para certificados)
+
+## 📂 Visão Geral da Estrutura do Projeto
+
+O projeto segue a estrutura padrão do Next.js App Router com um diretório `src`.
+
+- **`src/`**: Raiz do código-fonte.
+  - **`app/`**: Contém o roteamento baseado em sistema de arquivos, layouts e páginas.
+    - `(auth)/`: Rotas de autenticação (login, cadastro).
+    - `events/`: Detalhes de eventos e listagem.
+    - `organizer/`: Painel do organizador e ferramentas.
+    - `social/`: Funcionalidades sociais (chat, amigos).
+  - **`components/`**: Componentes de UI reutilizáveis (botões, modais, cartões, etc.).
+  - **`contexts/`**: Provedores de Contexto React (ex: `AuthContext`).
+  - **`services/`**: Camada de integração com API (instâncias Axios e repositórios).
+  - **`types/`**: Definições de tipos TypeScript.
+  - **`lib/`**: Funções utilitárias e código auxiliar compartilhado.
+
+## 🚀 Começando
+
+### Pré-requisitos
+
+- Node.js (v20+)
+- Backend rodando (geralmente na porta 3000)
+
+### Instalação
+
+```bash
+npm install
+```
+
+### Rodando Localmente
+
+Inicie o servidor de desenvolvimento:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3001](http://localhost:3001) (ou a porta mostrada no terminal) para visualizar a aplicação.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Construindo para Produção
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Para criar um build de produção:
 
-## Learn More
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Para iniciar o servidor de produção:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎨 Funcionalidades
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Descoberta de Eventos:** Navegue e pesquise por eventos.
+- **Inscrição:** Cadastro fácil em eventos.
+- **Painel do Organizador:** Crie e gerencie eventos.
+- **Sistema de Check-in:** Leitura de QR code para participantes.
+- **Certificados:** Gere e imprima certificados de participação.
+- **Social:** Converse com amigos que participarão dos mesmos eventos.
