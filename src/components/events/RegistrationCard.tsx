@@ -109,9 +109,8 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
 
   const canCancel = registration.status === 'pending' || registration.status === 'approved';
 
-  // Lógica para certificado: check-in e evento finalizado
-  const isEventFinished = event.endDate && new Date(event.endDate) < new Date();
-  const canGetCertificate = registration.status === 'checked_in' && isEventFinished;
+  // Lógica para certificado: check-in e evento finalizado (Status explicitamente finished)
+  const canGetCertificate = registration.status === 'checked_in' && event.status === 'finished';
 
   return (
     <>
