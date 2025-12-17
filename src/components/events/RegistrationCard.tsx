@@ -34,8 +34,8 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
     // 3. Aguardando Aprovação
     if (registration.status === 'pending') return 'bg-yellow-100 text-yellow-700 border-yellow-200';
 
-    // 4. Finalizado (Event status OR Date passed)
-    if (event.status === 'finished' || (event.endDate && new Date(event.endDate) < new Date())) {
+    // 4. Finalizado (Event status ONLY)
+    if (event.status === 'finished') {
       return 'bg-slate-800 text-white border-slate-900';
     }
 
@@ -67,7 +67,7 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
     if (registration.status === 'pending') return 'Aguardando Aprovação';
 
     // 4. Finalizado
-    if (event.status === 'finished' || (event.endDate && new Date(event.endDate) < new Date())) {
+    if (event.status === 'finished') {
       return 'Finalizado';
     }
 
