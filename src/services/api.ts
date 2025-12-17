@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001', // URL do seu Backend NestJS
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
 });
 
 // Interceptador para adicionar o Token JWT em toda requisição
