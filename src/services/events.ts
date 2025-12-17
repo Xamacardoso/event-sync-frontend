@@ -3,9 +3,9 @@ import { Event, CreateEventDTO } from '@/types';
 
 export const eventService = {
   // Lista eventos com filtros
-  list: async (filters?: { title?: string; startDate?: string; endDate?: string; type?: 'free' | 'paid'; status?: 'draft' | 'published' | 'canceled' | 'finished' }) => {
+  list: async (filters?: { title?: string; startDate?: string; endDate?: string; type?: 'free' | 'paid'; status?: 'draft' | 'published' | 'canceled' | 'finished'; page?: number; limit?: number }) => {
     // const params = new URLSearchParams(filters as any).toString();
-    const response = await api.get<Event[]>('/events', { params: filters });
+    const response = await api.get<{ data: Event[], meta: any }>('/events', { params: filters });
     return response.data;
   },
 

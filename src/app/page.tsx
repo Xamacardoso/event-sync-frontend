@@ -7,7 +7,7 @@ import { userService } from '@/services/users'; // Import userService
 import { Event } from '@/types';
 import { EventCard } from '@/components/events/EventCard';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'; // <--- Import do Modal
-import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays, Search, Filter, Users } from 'lucide-react'; // Add Users
+import { Plus, Menu, X, Ticket, Home, User, LogOut, CalendarDays, Search, Filter, Users, ChevronLeft, ChevronRight } from 'lucide-react'; // Add Users, ChevronLeft, ChevronRight
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -28,27 +28,39 @@ export default function HomePage() {
   const [filterType, setFilterType] = useState<undefined | 'free' | 'paid'>(undefined);
   const [filterStatus, setFilterStatus] = useState<undefined | 'published' | 'canceled' | 'finished'>('published');
 
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   // UI States
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   useEffect(() => {
-    // Debounce search
+    // Reset page to 1 when filters or search change
+    setPage(1);
+  }, [searchTerm, filterType, filterStatus]);
+
+  useEffect(() => {
+    // Debounce search and fetch on page change
     const timer = setTimeout(() => {
       fetchEvents();
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchTerm, filterType, filterStatus]);
+  }, [searchTerm, filterType, filterStatus, page]);
 
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const data = await eventService.list({
+      const response = await eventService.list({
         title: searchTerm || undefined,
         type: filterType,
         status: filterStatus,
+        page: page,
+        limit: 10,
       });
-      setEvents(data);
+      setEvents(response.data);
+      setTotalPages(response.meta.lastPage);
     } catch (error) {
       console.error('Erro ao buscar eventos:', error);
     } finally {
@@ -273,6 +285,33 @@ export default function HomePage() {
             {events.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-8 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600 transition-colors"
+                  aria-label="Página anterior"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+
+                <span className="text-sm font-medium text-gray-600">
+                  Página {page} de {totalPages}
+                </span>
+
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600 transition-colors"
+                  aria-label="Próxima página"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-100">
