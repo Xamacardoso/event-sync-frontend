@@ -25,36 +25,65 @@ export const RegistrationCard = ({ registration, onRegistrationCancelled }: Regi
   if (!event) return null;
 
   const getStatusStyle = () => {
+    // 1. Evento Cancelado
+    if (event.status === 'canceled') return 'bg-red-100 text-red-700 border-red-200';
+
+    // 2. Inscrição Cancelada
     if (registration.status === 'canceled') return 'bg-gray-100 text-gray-500 border-gray-200';
 
+    // 3. Aguardando Aprovação
+    if (registration.status === 'pending') return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+
+    // 4. Finalizado (Event status OR Date passed)
     if (event.status === 'finished' || (event.endDate && new Date(event.endDate) < new Date())) {
       return 'bg-slate-800 text-white border-slate-900';
     }
 
+    // 5. Em Andamento (Happening Now)
+    const now = new Date();
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    if (event.status === 'published' && now >= start && now <= end) {
+      return 'bg-green-600 text-white border-green-700';
+    }
+
+    // 6. Default / Confirmado / Futuro
     switch (registration.status) {
       case 'approved': return 'bg-green-100 text-green-700 border-green-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
       case 'checked_in': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
   const getStatusLabel = () => {
-    // Se o evento já acabou, mostra como Finalizado (independente do status da inscrição, visualmente ajuda)
-    // Mas se a inscrição foi cancelada, 'Cancelada' tem prioridade.
+    // 1. Evento Cancelado
+    if (event.status === 'canceled') return 'Evento Cancelado';
+
+    // 2. Inscrição Cancelada
     if (registration.status === 'canceled') return 'Inscrição Cancelada';
 
-    // Verifica se evento acabou
+    // 3. Aguardando Aprovação
+    if (registration.status === 'pending') return 'Aguardando Aprovação';
+
+    // 4. Finalizado
     if (event.status === 'finished' || (event.endDate && new Date(event.endDate) < new Date())) {
       return 'Finalizado';
     }
 
+    // 5. Em Andamento
+    const now = new Date();
+    const start = new Date(event.startDate);
+    const end = new Date(event.endDate);
+    if (event.status === 'published' && now >= start && now <= end) {
+      return 'Em Andamento';
+    }
+
+    // 6. Default / Confirmado
     switch (registration.status) {
       case 'approved': return 'Confirmado';
-      case 'pending': return 'Aguardando Aprovação';
-      case 'rejected': return 'Recusado';
       case 'checked_in': return 'Presença Confirmada';
+      case 'rejected': return 'Recusado';
       default: return 'Desconhecido';
     }
   };
